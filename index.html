@@ -87,7 +87,21 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 </style>
 </head>
 <body>
+<style>
+#cloud-gate{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.72);display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,sans-serif}
+#cloud-box{width:min(520px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:16px;padding:22px;box-shadow:0 20px 60px #0004}
+#cloud-box h2{font-size:20px;margin:0 0 8px}#cloud-box p{color:#64748b;margin:8px 0 14px}#cloud-box input{margin:5px 0 12px}#cloud-box button{margin:4px 6px 4px 0}#cloud-status{font-size:12px;color:#64748b;margin-left:8px}
+#cloud-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 24px;background:#eff6ff;border-bottom:1px solid #bfdbfe;font-size:12px}
+#cloud-conflict{display:none;position:fixed;z-index:9998;inset:auto 12px 12px 12px;background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:14px;box-shadow:0 8px 30px #0002}
+</style>
+<div id="cloud-gate"><div id="cloud-box"><h2>☁️ Micro Bookkeeping Cloud</h2><p>请先登录 Supabase 账号。电脑与手机必须使用同一个账号。</p>
+<label>Email</label><input id="cloud-email" type="email" autocomplete="username" placeholder="your@email.com">
+<label>Password</label><input id="cloud-password" type="password" autocomplete="current-password" placeholder="Password">
+<div><button class="btn" id="cloud-login">Login</button><button class="sm" id="cloud-signup">Create account</button></div>
+<small id="cloud-auth-msg" style="color:#64748b"></small></div></div>
+<div id="cloud-conflict"><b>⚠️ 检测到资料版本冲突</b><p id="cloud-conflict-msg">另一台设备已更新云端资料。为避免覆盖，自动上传已暂停。</p><button class="btn" id="cloud-use-server">使用云端版本（覆盖本机未同步修改）</button><button class="sm" id="cloud-keep-local">保留本机版本并尝试重新上传</button></div>
 <header><h1 id="brand">📒 Micro Bookkeeping</h1><small style="color:#6b7280">Currency: MYR (RM)</small></header>
+<div id="cloud-toolbar"><b>☁️ Cloud:</b> <span id="cloud-user-label">Not signed in</span><span id="cloud-status">Please sign in</span><span style="flex:1"></span><button class="sm" id="cloud-sync-now">Sync now</button><button class="sm" id="cloud-backup">Download backup</button><button class="sm" id="cloud-logout">Logout</button></div>
 <main>
   <!-- Dashboard KPIs -->
   <div class="cards" id="kpis"></div>
@@ -270,6 +284,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="rm-send" style="background:#16a34a">Open WhatsApp</button><button class="btn" id="rm-copy" style="background:#475569">Copy</button><button class="sm hide" id="rm-next" style="padding:9px 14px">Next →</button><button class="sm" id="rm-close" style="padding:9px 14px">Close</button></div>
   <small style="color:#6b7280;display:block;margin-top:8px">WhatsApp opens with the message ready — press send there. The reminder is then marked as sent.</small></div></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ========== 数据层：全部存放在 localStorage ========== */
 const KEY = 'micro_bookkeeping_v1';
@@ -281,7 +296,95 @@ const fresh = () => ({
   entries: [], journal: [], invoices: [], payments: [], customers: [], products: [], packages: [], visits: [], stockAdj: [], appts: [], topups: [], nextInv: 1 });
 let S;
 try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY))); } catch (e) { S = fresh(); }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 存储不可用时页面仍可使用，只是无法保留数据 */ } };
+// 本机缓存立即写入；云端写入由防抖队列处理，避免每个字段输入都触发请求
+let cloudClient = null, cloudUser = null, cloudReady = false, cloudDirty = false, cloudApplying = false;
+let cloudRevision = 0, cloudChannel = null, cloudTimer = null, cloudBusy = false, cloudConflict = false, cloudChangeSeq = 0;
+const CLOUD_URL = 'https://emlnbtomkmdifdycqarm.supabase.co';
+const CLOUD_KEY = 'sb_publishable_upTN0MBYoTHvuyCAiLkTWg_Y7z0ZbVr';
+const cloudMsg = (t, color) => { const el = document.getElementById('cloud-status'); if (el) { el.textContent = t; if (color) el.style.color = color; } };
+const localSave = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const save = () => { localSave(); if (cloudReady && !cloudApplying) { cloudChangeSeq++; cloudDirty = true; scheduleCloudSave(); } };
+function scheduleCloudSave() { clearTimeout(cloudTimer); cloudTimer = setTimeout(pushCloud, 1200); cloudMsg('本机已保存 · 等待云端同步'); }
+function setGate(html) { $('cloud-box').innerHTML = html; $('cloud-gate').style.display = 'flex'; }
+function meaningfulData(x) { return !!(x && ((x.entries||[]).length || (x.journal||[]).length || (x.invoices||[]).length || (x.customers||[]).length || (x.products||[]).length || (x.payments||[]).length || (x.appts||[]).length || (x.topups||[]).length)); }
+function saveLocalSafetyCopy() { try { localStorage.setItem(KEY + '_precloud_backup_' + new Date().toISOString().replace(/[:.]/g,'-'), JSON.stringify(S)); } catch(e) {} }
+function downloadJson(obj, name) { const a=document.createElement('a'), u=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:'application/json'})); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1500); }
+function showMigration() {
+  const has = meaningfulData(S);
+  setGate(`<h2>☁️ 首次云端迁移</h2><p>这个 Supabase 账号目前没有 Micro Bookkeeping 云端资料。请选择首次资料来源。建议在<strong>资料最完整的电脑</strong>上执行上传。</p>
+  <p>本机检测到：${(S.invoices||[]).length} 张发票、${(S.entries||[]).length} 笔收支、${(S.customers||[]).length} 位客户。</p>
+  <button class="btn" id="cloud-upload-local" ${has?'':'disabled'}>上传这台设备的现有资料</button>
+  <button class="sm" id="cloud-start-empty">从空白账套开始</button><button class="sm" id="cloud-export-before">先下载本机备份</button>
+  <p><small>不会自动合并不同设备的旧资料，避免重复发票、收款或日记账。其他设备请在迁移完成后登录并下载云端版本。</small></p><button class="sm" id="cloud-cancel-login">Logout</button>`);
+  $('cloud-upload-local')?.addEventListener('click',()=>firstCloudInsert(S));
+  $('cloud-start-empty')?.addEventListener('click',()=>firstCloudInsert(fresh()));
+  $('cloud-export-before')?.addEventListener('click',()=>downloadJson(S,'Micro-Bookkeeping-local-backup-'+today()+'.json'));
+  $('cloud-cancel-login')?.addEventListener('click',async()=>{await cloudClient.auth.signOut();location.reload();});
+}
+async function firstCloudInsert(data) {
+  try { cloudMsg('正在建立云端账套…'); migrateTopups(); migrateOR(); saveLocalSafetyCopy();
+    const {data:row,error}=await cloudClient.from('bookkeeping_data').insert({user_id:cloudUser.id,data,revision:1,updated_at:new Date().toISOString()}).select('revision').single();
+    if(error) throw error; S=Object.assign(fresh(),data); localSave(); cloudRevision=row.revision||1; cloudDirty=false; await activateCloud();
+  } catch(e) { alert('首次迁移失败：'+e.message+'\n请确认已执行本文提供的 SQL，并且 RLS / Data API 权限已设置。'); cloudMsg('迁移失败',' #dc2626'); }
+}
+async function pullCloud({force=false}={}) {
+  const {data,error}=await cloudClient.from('bookkeeping_data').select('data,revision,updated_at').eq('user_id',cloudUser.id).maybeSingle();
+  if(error) throw error; if(!data) return false;
+  if(cloudDirty && !force) { showConflict('云端已有新版本（revision '+data.revision+'），本机也有尚未同步的修改。'); return true; }
+  saveLocalSafetyCopy(); cloudApplying=true; S=Object.assign(fresh(),data.data||{}); localSave(); cloudRevision=data.revision||1; cloudDirty=false; cloudConflict=false; cloudApplying=false;
+  $('cloud-conflict').style.display='none';
+  try { migrateTopups(); migrateOR(); loadCompanyForm(); fillAccts(); addRow(); renderAll(); } catch(e) { console.error(e); }
+  cloudMsg('已同步 · '+new Date(data.updated_at).toLocaleString(),'#15803d'); return true;
+}
+function showConflict(msg) { cloudConflict=true; cloudDirty=true; $('cloud-conflict-msg').textContent=msg; $('cloud-conflict').style.display='block'; cloudMsg('冲突保护已暂停上传','#b45309'); }
+async function pushCloud() {
+  if(!cloudReady || !cloudDirty || cloudBusy || cloudConflict) return; cloudBusy=true; const sentSeq=cloudChangeSeq;
+  try {
+    const next=cloudRevision+1;
+    const {data,error}=await cloudClient.from('bookkeeping_data').update({data:S,revision:next,updated_at:new Date().toISOString()}).eq('user_id',cloudUser.id).eq('revision',cloudRevision).select('revision').maybeSingle();
+    if(error) throw error;
+    if(!data) { const {data:latest,error:er}=await cloudClient.from('bookkeeping_data').select('revision,updated_at').eq('user_id',cloudUser.id).maybeSingle(); if(er) throw er; showConflict('云端版本已从 '+cloudRevision+' 更新到 '+(latest?.revision ?? '?')+'。本机修改尚未上传。'); return; }
+    cloudRevision=data.revision; cloudDirty=(cloudChangeSeq!==sentSeq); cloudMsg(cloudDirty?'有新修改 · 继续同步':'云端同步完成 · '+new Date().toLocaleTimeString(),'#15803d'); if(cloudDirty) scheduleCloudSave();
+  } catch(e) { cloudMsg('同步失败：'+e.message,'#dc2626'); }
+  finally { cloudBusy=false; }
+}
+function subscribeCloud() {
+  if(cloudChannel) cloudClient.removeChannel(cloudChannel);
+  cloudChannel=cloudClient.channel('bookkeeping-'+cloudUser.id).on('postgres_changes',{event:'*',schema:'public',table:'bookkeeping_data',filter:'user_id=eq.'+cloudUser.id},async payload=>{
+    const rev=payload.new?.revision||0; if(rev<=cloudRevision || cloudBusy) return;
+    if(cloudDirty) { showConflict('另一台设备已更新云端版本至 '+rev+'。本机有未同步修改。'); return; }
+    try { await pullCloud(); } catch(e) { cloudMsg('接收云端更新失败：'+e.message,'#dc2626'); }
+  }).subscribe();
+}
+async function activateCloud() {
+  cloudReady=true; cloudConflict=false; $('cloud-gate').style.display='none'; $('cloud-user-label').textContent=cloudUser.email||cloudUser.id; subscribeCloud();
+  try { await pullCloud(); } catch(e) { cloudMsg('读取云端失败：'+e.message,'#dc2626'); }
+}
+async function afterLogin(user) {
+  cloudUser=user; $('cloud-user-label').textContent=user.email||user.id;
+  try {
+    const {data,error}=await cloudClient.from('bookkeeping_data').select('data,revision,updated_at').eq('user_id',user.id).maybeSingle();
+    if(error) throw error;
+    if(!data) { showMigration(); return; }
+    await activateCloud();
+  } catch(e) { alert('无法读取云端资料：'+e.message+'\n请检查 SQL、RLS 与 Data API 权限。'); cloudMsg('云端连接失败','#dc2626'); }
+}
+async function initCloud() {
+  if(!window.supabase?.createClient) { $('cloud-auth-msg').textContent='无法加载 Supabase SDK，请检查网络连接后刷新。'; return; }
+  cloudClient=window.supabase.createClient(CLOUD_URL,CLOUD_KEY);
+  $('cloud-login').onclick=async()=>{ const email=$('cloud-email').value.trim(),password=$('cloud-password').value; $('cloud-auth-msg').textContent='Signing in…'; const {data,error}=await cloudClient.auth.signInWithPassword({email,password}); if(error) $('cloud-auth-msg').textContent=error.message; else await afterLogin(data.user); };
+  $('cloud-signup').onclick=async()=>{ const email=$('cloud-email').value.trim(),password=$('cloud-password').value; $('cloud-auth-msg').textContent='Creating account…'; const {data,error}=await cloudClient.auth.signUp({email,password}); if(error) $('cloud-auth-msg').textContent=error.message; else if(data.session) await afterLogin(data.user); else $('cloud-auth-msg').textContent='注册成功。请检查邮箱完成验证，然后回来登录。'; };
+  $('cloud-sync-now').onclick=async()=>{ if(!cloudReady)return alert('请先登录'); if(cloudDirty) await pushCloud(); else try{await pullCloud();}catch(e){alert(e.message);} };
+  $('cloud-backup').onclick=()=>downloadJson(S,'Micro-Bookkeeping-backup-'+today()+'.json');
+  $('cloud-logout').onclick=async()=>{ if(cloudDirty && !confirm('本机还有未同步修改。仍要登出吗？建议先点 Sync now。'))return; await cloudClient.auth.signOut(); location.reload(); };
+  $('cloud-use-server').onclick=async()=>{ cloudConflict=false; cloudDirty=false; try{await pullCloud({force:true});}catch(e){alert(e.message);} };
+  $('cloud-keep-local').onclick=async()=>{ cloudConflict=false; try{const {data,error}=await cloudClient.from('bookkeeping_data').select('revision').eq('user_id',cloudUser.id).maybeSingle();if(error)throw error;cloudRevision=data?.revision||0; await pushCloud();}catch(e){showConflict('无法安全上传：'+e.message);} };
+  const {data:{session}}=await cloudClient.auth.getSession();
+  if(session) await afterLogin(session.user);
+}
+window.addEventListener('online',()=>{if(cloudReady){if(cloudDirty)pushCloud();else pullCloud().catch(()=>{});}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudReady){if(cloudDirty)pushCloud();else pullCloud().catch(()=>{});}});
+
 
 const $ = id => document.getElementById(id);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -1368,7 +1471,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => switchT
 ['pl-from', 'pl-to'].forEach(i => $(i).onchange = renderPL); $('bs-date').onchange = renderBS;
 $('ap-date').value = $('e-date').value = $('i-date').value = $('p-date').value = $('pl-to').value = $('bs-date').value = today();
 $('pl-from').value = today().slice(0, 4) + '-01-01'; $('i-tax').value = S.co.taxRate;
-migrateTopups(); migrateOR(); loadCompanyForm(); fillAccts(); addRow(); renderAll();
+initCloud().catch(e=>{console.error(e); $('cloud-auth-msg').textContent='初始化失败：'+e.message;});
 </script>
 </body>
 </html>
