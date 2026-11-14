@@ -70,6 +70,16 @@ body.pr-inv>#print-area.classic{display:flex!important;flex-direction:column;min
 .tl-ev{position:absolute;border:1px solid rgba(0,0,0,.14);border-radius:6px;padding:2px 5px;font-size:12px;line-height:1.3;overflow:hidden;cursor:pointer;box-sizing:border-box;z-index:2}.tl-ev small{color:#4b5563}
 .tl-now{position:absolute;left:0;right:0;height:0;border-top:2px solid #ef4444;z-index:3;pointer-events:none}
 .sc-week{display:flex;gap:6px;margin:10px 0;overflow-x:auto}.sc-week button{flex:1 0 74px;padding:8px;border:1px solid var(--bd);background:#fff;border-radius:8px;cursor:pointer;font:inherit}.sc-week button.on{border-color:var(--pri);background:#eff6ff}.sc-week button.td{font-weight:700}
+tr.clk{cursor:pointer}tr.clk:hover{background:#f8fafc}
+#t-customers.profile .subtabs,#t-customers.profile #cu-form-card,#t-customers.profile #cu-list-card,#t-customers.profile #rp-cust-w{display:none}
+.ph-grid{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.ph{position:relative;width:72px;height:72px}.ph.ph-s{width:44px;height:44px}
+.ph img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--bd);cursor:zoom-in;display:block}
+.ph .x{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:#dc2626;color:#fff;cursor:pointer;font-size:13px;line-height:20px;padding:0}
+#pf-rpt #cu-report{margin-top:4px}
+@media print{body.pr-rep #cu-detail>:not(#pf-rpt){display:none!important}body.pr-rep #pf-rpt{border:0;padding:0;margin:0}body.pr-rep #pf-rpt>.pf-h{display:none}}
+.pf-nav{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)}
+.pf-body{display:none}.pf-card.pf-open .pf-body{display:block}.pf-h{cursor:pointer;user-select:none}.pf-card:not(.pf-open) .pf-h{margin-bottom:0!important}
+.pf-arrow::before{content:"▸";display:inline-block;width:18px;color:var(--mut)}.pf-card.pf-open .pf-arrow::before{content:"▾"}.pf-sum{margin-left:10px;font-size:12px;font-weight:400;color:var(--mut)}
 /* ===== iPhone / iPad 适配 ===== */
 html{-webkit-text-size-adjust:100%}
 body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom)}
@@ -182,18 +192,17 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   </section>
   <!-- TAB: Customers -->
   <section id="t-customers" class="hide">
-    <div class="subtabs noprint"><button id="cs-t1" class="on">Customers</button><button id="cs-t2">Package Usage Report</button></div>
     <div id="cu-main">
-    <div class="card"><h2 id="cu-title" style="margin-bottom:10px">Add Customer</h2><div class="grid">
+    <div class="card" id="cu-form-card"><h2 id="cu-title" style="margin-bottom:10px">Add Customer</h2><div class="grid">
       <div><label>Name</label><input id="cu-name"></div><div><label>Phone</label><input id="cu-phone"></div><div><label>Email</label><input id="cu-email"></div>
       <div style="grid-column:span 2"><label>Address</label><input id="cu-addr"></div>
       <div><label>Birthday</label><input type="date" id="cu-dob"></div><div style="grid-column:span 2"><label>Notes (preferences, allergies, etc.)</label><input id="cu-notes"></div>
       <div><button class="btn" id="cu-save">Save Customer</button> <button class="sm" id="cu-cancel">Clear</button></div></div></div>
-    <div class="card"><h2 style="margin-bottom:10px">Customers &amp; Receivables</h2><div class="tw"><table><thead><tr><th>Customer</th><th>Contact</th><th class="r">Sessions left</th><th>Last visit</th><th class="r">Wallet</th><th class="r">Outstanding</th><th></th></tr></thead><tbody id="cu-body"></tbody></table></div></div>
+    <div class="card" id="cu-list-card"><h2 style="margin-bottom:10px">Customers &amp; Receivables</h2><div class="tw"><table><thead><tr><th>Customer</th><th>Contact</th><th class="r">Sessions left</th><th>Last visit</th><th class="r">Wallet</th><th class="r">Outstanding</th><th></th></tr></thead><tbody id="cu-body"></tbody></table></div></div>
     <div id="cu-detail"></div></div>
     <div id="cu-report" class="hide">
       <div class="card noprint"><div class="grid">
-        <div><label>Customer</label><select id="rp-cust"></select></div>
+        <div id="rp-cust-w"><label>Customer</label><select id="rp-cust"></select></div>
         <div><label>Package status</label><select id="rp-status"><option value="">All</option><option value="Active">Active</option><option value="Expiring">Expiring within 30 days</option><option value="Used up">Used up</option><option value="Expired">Expired</option></select></div>
         <div><label>Usage from</label><input type="date" id="rp-from"></div><div><label>Usage to</label><input type="date" id="rp-to"></div>
         <div><button class="btn" id="rp-csv">Export CSV</button> <button class="btn" id="rp-pdf" style="background:#dc2626">Download PDF</button> <button class="btn" id="rp-share" style="background:#16a34a">Share ▾</button> <button class="sm" id="rp-print" style="padding:9px 14px">Print</button></div></div>
@@ -279,12 +288,27 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     <button class="btn" style="background:#16a34a" onclick="shareFile()">Send PDF file…</button> <button class="btn" style="background:#2563eb" onclick="shareMail()">Email</button> <button class="btn" style="background:#475569" onclick="copyText()">Copy text</button></div>
   <div class="inv" id="inv-view"></div></div></div>
 <div id="print-area"></div>
+<div id="dlg" class="ov hide" style="z-index:90"><div class="rm-box" style="width:420px"><h2 id="dlg-t" style="margin-bottom:8px"></h2><div id="dlg-m" style="white-space:pre-wrap;margin-bottom:16px"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="sm" id="dlg-no" style="padding:9px 16px">Cancel</button><button class="btn" id="dlg-ok">OK</button></div></div></div>
+<div id="vs-modal" class="ov hide"><div class="rm-box"><h2 style="margin-bottom:10px">Edit Service Record</h2><div class="grid">
+  <div><label>Date</label><input type="date" id="ve-date"></div><div><label>Service performed</label><input id="ve-svc"></div><div><label>Staff</label><input id="ve-staff"></div>
+  <div style="grid-column:1/-1"><label>Notes</label><input id="ve-notes"></div>
+  <div style="grid-column:1/-1"><label>Customer condition / treatment details</label><textarea id="ve-cond" rows="4"></textarea></div>
+  <div style="grid-column:1/-1"><label>Photos</label><div id="ve-ph" class="ph-grid"></div><input type="file" id="ve-file" accept="image/*" multiple style="margin-top:6px"></div></div>
+  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="ve-save">Save</button><button class="sm" id="ve-cancel" style="padding:9px 14px">Cancel</button></div></div></div>
+<div id="ph-view" class="ov hide" style="z-index:80;background:rgba(0,0,0,.88)" onclick="if(event.target===this)this.classList.add('hide')"><div style="text-align:center;max-width:100%">
+  <img id="ph-big" style="max-width:100%;max-height:78vh;border-radius:8px;background:#fff"><div id="ph-cap" style="color:#fff;margin:8px 0"></div>
+  <div style="display:flex;gap:8px;justify-content:center"><button class="btn" style="background:#475569" onclick="phStep(-1)">‹ Prev</button><button class="btn" style="background:#475569" onclick="phStep(1)">Next ›</button><button class="btn" style="background:#dc2626" onclick="document.getElementById('ph-view').classList.add('hide')">Close</button></div></div></div>
 <div id="rm-modal" class="ov hide"><div class="rm-box"><h2 style="margin-bottom:8px">WhatsApp reminder</h2><div id="rm-info" style="margin-bottom:10px"></div>
   <label>Message (you can edit before sending)</label><textarea id="rm-text" rows="8"></textarea>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="rm-send" style="background:#16a34a">Open WhatsApp</button><button class="btn" id="rm-copy" style="background:#475569">Copy</button><button class="sm hide" id="rm-next" style="padding:9px 14px">Next →</button><button class="sm" id="rm-close" style="padding:9px 14px">Close</button></div>
   <small style="color:#6b7280;display:block;margin-top:8px">WhatsApp opens with the message ready — press send there. The reminder is then marked as sent.</small></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ☁️ 云端同步总开关：false = 暂时停用 Supabase（纯本机模式，不加载 SDK、不显示登录页）；改回 true 即可重新启用 */
+const CLOUD_ENABLED = true;
+if (CLOUD_ENABLED) document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
+</script>
 <script>
 /* ========== 数据层：全部存放在 localStorage ========== */
 const KEY = 'micro_bookkeeping_v1';
@@ -302,7 +326,8 @@ let cloudRevision = 0, cloudChannel = null, cloudTimer = null, cloudBusy = false
 const CLOUD_URL = 'https://emlnbtomkmdifdycqarm.supabase.co';
 const CLOUD_KEY = 'sb_publishable_upTN0MBYoTHvuyCAiLkTWg_Y7z0ZbVr';
 const cloudMsg = (t, color) => { const el = document.getElementById('cloud-status'); if (el) { el.textContent = t; if (color) el.style.color = color; } };
-const localSave = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+let saveWarned = false;
+const localSave = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); saveWarned = false; } catch (e) { if (!saveWarned) { saveWarned = true; alert('Browser storage is full — your latest change could NOT be saved. Download a backup in Settings, then delete some old photos.'); } } };
 const save = () => { localSave(); if (cloudReady && !cloudApplying) { cloudChangeSeq++; cloudDirty = true; scheduleCloudSave(); } };
 function scheduleCloudSave() { clearTimeout(cloudTimer); cloudTimer = setTimeout(pushCloud, 1200); cloudMsg('本机已保存 · 等待云端同步'); }
 function setGate(html) { $('cloud-box').innerHTML = html; $('cloud-gate').style.display = 'flex'; }
@@ -331,9 +356,9 @@ async function pullCloud({force=false}={}) {
   const {data,error}=await cloudClient.from('bookkeeping_data').select('data,revision,updated_at').eq('user_id',cloudUser.id).maybeSingle();
   if(error) throw error; if(!data) return false;
   if(cloudDirty && !force) { showConflict('云端已有新版本（revision '+data.revision+'），本机也有尚未同步的修改。'); return true; }
-  saveLocalSafetyCopy(); cloudApplying=true; S=Object.assign(fresh(),data.data||{}); localSave(); cloudRevision=data.revision||1; cloudDirty=false; cloudConflict=false; cloudApplying=false;
+  saveLocalSafetyCopy(); cloudApplying=true; S=Object.assign(fresh(),data.data||{}); S.co=Object.assign(fresh().co,S.co); localSave(); /* 旧版本存到云端的资料可能缺少新字段，已补齐默认值 */ cloudRevision=data.revision||1; cloudDirty=false; cloudConflict=false; cloudApplying=false;
   $('cloud-conflict').style.display='none';
-  try { migrateTopups(); migrateOR(); loadCompanyForm(); fillAccts(); addRow(); renderAll(); } catch(e) { console.error(e); }
+  try { migrateTopups(); migrateOR(); loadCompanyForm(); fillAccts(); if (!$('i-items').children.length) addRow(); renderAll(); } catch(e) { console.error(e); }
   cloudMsg('已同步 · '+new Date(data.updated_at).toLocaleString(),'#15803d'); return true;
 }
 function showConflict(msg) { cloudConflict=true; cloudDirty=true; $('cloud-conflict-msg').textContent=msg; $('cloud-conflict').style.display='block'; cloudMsg('冲突保护已暂停上传','#b45309'); }
@@ -748,7 +773,7 @@ function renderSettings() {
   $('ac-list').innerHTML = `<div><small>Income accounts</small><div>${list('income')}</div></div><div style="margin-top:8px"><small>Expense accounts (accounts already in use cannot be deleted)</small><div>${list('expense')}</div></div>`;
 }
 $('bk-exp').onclick = () => saveBlob(new Blob([JSON.stringify(S)], { type: 'application/json' }), 'bookkeeping-backup-' + today() + '.json');
-$('bk-imp').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { try { if (!JSON.parse(t).journal) throw 0; if (!confirm('Replace ALL current data with this backup?')) return; localStorage.setItem(KEY, t); location.reload(); } catch (x) { alert('Invalid backup file.'); } }); };
+$('bk-imp').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { try { if (!JSON.parse(t).journal) throw 0; dlgAsk('Replace ALL current data with this backup?', () => { localStorage.setItem(KEY, t); location.reload(); }, 'Replace', true); return; } catch (x) { alert('Invalid backup file.'); } }); };
 
 /* ===== 客户资料：开单与应收（A/R）通过 customer id 关联 ===== */
 function fillCustSel() {
@@ -827,49 +852,139 @@ function renderInventory() {
 }
 
 /* ===== 客户管理：配套 / 剩余次数 / 服务记录，均与发票关联 ===== */
-let openCust = null;
+let openCust = null; const pfOpen = new Set(); let pfCust = null; let svcPh = [], veSt = { id: '', photos: [] }, svcEditId = null, svcLoad = null;   // svcEditId：预约“Completed Service”后正在补充资料的服务记录   // svcPh：待保存的新服务照片；veSt：正在编辑的服务记录   // pfOpen：个人页中当前展开的板块
 // 配套状态：已用 = 该配套下的服务记录数；剩余 = 总次数 − 已用
 function pkgStat(k) { const used = S.visits.filter(v => v.pkgId === k.id).length, rem = k.total - used; return { used, rem, st: rem <= 0 ? 'Used up' : (k.expiry && k.expiry < today() ? 'Expired' : 'Active') }; }
 function renderCustomers() {
   $('cu-body').innerHTML = S.customers.map(c => { const k = custStat(c);
     const left = S.packages.filter(p => p.custId === c.id).reduce((s, p) => { const t = pkgStat(p); return s + (t.st === 'Active' ? t.rem : 0); }, 0);
     const last = S.visits.filter(v => v.custId === c.id).reduce((m, v) => v.date > m ? v.date : m, '');
-    return `<tr><td><b>${esc(c.name)}</b></td><td>${esc([c.phone, c.email].filter(Boolean).join(' · '))}</td><td class="r"><b>${left}</b></td><td>${last ? dmy(last) : '-'}</td><td class="r">${fmt(walletBal(c.id))}</td>
+    return `<tr class="clk" onclick="if(!event.target.closest('button'))openCustomer('${c.id}')"><td><b><a href="#cust-${c.id}" onclick="event.preventDefault();openCustomer('${c.id}')" style="color:inherit">${esc(c.name)}</a></b></td><td>${esc([c.phone, c.email].filter(Boolean).join(' · '))}</td><td class="r"><b>${left}</b></td><td>${last ? dmy(last) : '-'}</td><td class="r">${fmt(walletBal(c.id))}</td>
     <td class="r ${k.od ? 'neg' : ''}">${fmt(k.out)}</td><td><button class="sm" onclick="openCustomer('${c.id}')">Open</button><button class="sm" onclick="newInvFor('${c.id}')">New Invoice</button><button class="sm" onclick="apNewFor('${c.id}')">Book</button>
     <button class="sm" onclick="custStatement('${c.id}')">Statement</button><button class="sm" onclick="editCust('${c.id}')">Edit</button>${k.n ? '' : `<button class="sm del" onclick="delCust('${c.id}')">Delete</button>`}</td></tr>`; }).join('') || empty(7);
 }
-window.openCustomer = id => { openCust = id; renderCustDetail(); $('cu-detail').scrollIntoView({ behavior: 'smooth' }); };
-window.closeCust = () => { openCust = null; renderCustDetail(); };
-window.usePkg = id => { $('cs-pkg').value = id; svcFill(); $('cs-svc').focus(); };
+window.openCustomer = id => { svcEditId = null; svcLoad = null; openCust = id; if (location.hash !== '#cust-' + id) location.hash = 'cust-' + id; renderCustDetail(); window.scrollTo(0, 0); };
+window.closeCust = () => { svcEditId = null; svcLoad = null; openCust = null; if (location.hash) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } } renderCustDetail(); window.scrollTo(0, 0); };
+/* 个人页板块：默认全部折叠，点标题（或顶部快捷按钮）才展开；重新渲染后保持展开状态 */
+const PF_IDS = ['pf-service', 'pf-wallet', 'pf-appt', 'pf-pkg', 'pf-hist', 'pf-inv', 'pf-rpt'];
+const pfApply = id => { const c = document.getElementById(id); if (c) c.classList.toggle('pf-open', pfOpen.has(id)); };
+window.pfToggle = id => { pfOpen.has(id) ? pfOpen.delete(id) : pfOpen.add(id); pfApply(id); };
+window.pfGo = id => { pfOpen.add(id); pfApply(id); const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+function pfCollapsible(sums) {
+  PF_IDS.forEach(id => {
+    const card = document.getElementById(id); if (!card) return; const head = card.firstElementChild;       // 标题行（h2 或带按钮的 .row）
+    const body = document.createElement('div'); body.className = 'pf-body'; while (head.nextSibling) body.appendChild(head.nextSibling); card.appendChild(body);
+    card.classList.add('pf-card'); head.classList.add('pf-h');
+    const h2 = head.tagName === 'H2' ? head : head.querySelector('h2');
+    h2.insertAdjacentHTML('afterbegin', '<span class="pf-arrow"></span>'); if (sums[id]) h2.insertAdjacentHTML('beforeend', `<span class="pf-sum">${sums[id]}</span>`);
+    head.onclick = e => { if (!e.target.closest('button,a,input,select')) pfToggle(id); };
+    pfApply(id);
+  });
+}
+function onProfileHash() {                            // 地址栏 #cust-<id> ↔ 个人页（浏览器 / 手机返回键可回到列表）
+  const m = location.hash.match(/^#cust-(\w+)$/);
+  if (m && S.customers.some(c => c.id === m[1])) { openCust = m[1]; switchTab('customers'); cuSub('list'); } else openCust = null;
+  renderCustDetail();
+}
+window.addEventListener('hashchange', onProfileHash);
+window.usePkg = id => { pfGo('pf-service'); $('cs-pkg').value = id; svcFill(); $('cs-svc').focus(); };
 window.svcFill = () => { const k = S.packages.find(x => x.id === $('cs-pkg').value); if (k && !$('cs-svc').value) $('cs-svc').value = k.name; };
+window.svcCancel = () => { svcEditId = null; svcLoad = null; svcPh = []; renderCustDetail(); };
 window.addVisit = () => {
+  if (svcEditId) {                                   // 预约完成后补充：更新已生成的服务记录，不新增、不重复扣次数
+    const v = S.visits.find(x => x.id === svcEditId), date = $('cs-date').value, svc = $('cs-svc').value.trim();
+    if (v) { if (!date || !svc) return alert('Date and service are required.');
+      Object.assign(v, { date, service: svc, staff: $('cs-staff').value.trim(), notes: $('cs-notes').value.trim(), cond: $('cs-cond').value.trim(), photos: svcPh.slice() });
+      svcEditId = null; svcLoad = null; svcPh = []; save(); renderAll(); return; }
+    svcEditId = null; svcLoad = null;
+  }
   const date = $('cs-date').value, pkgId = $('cs-pkg').value, k = S.packages.find(x => x.id === pkgId), svc = $('cs-svc').value.trim() || (k ? k.name : '');
   if (!date || !svc) return alert('Date and service are required.');
   if (k && pkgStat(k).rem <= 0) return alert('This package has no sessions left.');
-  S.visits.push({ id: uid(), custId: openCust, pkgId: pkgId || null, date, service: svc, staff: $('cs-staff').value.trim(), notes: $('cs-notes').value.trim() });
+  S.visits.push({ id: uid(), custId: openCust, pkgId: pkgId || null, date, service: svc, staff: $('cs-staff').value.trim(), notes: $('cs-notes').value.trim(), cond: $('cs-cond').value.trim(), photos: svcPh.slice() }); svcPh = [];
   save(); renderAll();
 };
-window.delVisit = id => { if (!confirm('Delete this service record? (the session is returned to the package)')) return; const dv = S.visits.find(v => v.id === id); if (dv && dv.apptId) { const ap = S.appts.find(a => a.id === dv.apptId); if (ap) ap.status = 'Booked'; } S.visits = S.visits.filter(v => v.id !== id); save(); renderAll(); };
+/* ===== 每次护理的情况与照片：照片压缩成 JPEG 存入记录（visit.photos），随备份一起导出 ===== */
+function readPhotos(files, cb) {
+  Promise.all([...files].filter(f => /^image\//.test(f.type)).map(f => new Promise(res => {
+    const rd = new FileReader(); rd.onerror = () => res(null);
+    rd.onload = () => { const img = new Image(); img.onerror = () => res(null); img.onload = () => {
+      const k = Math.min(1, 720 / Math.max(img.width, img.height)), cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height); res(cv.toDataURL('image/jpeg', 0.7)); }; img.src = rd.result; };
+    rd.readAsDataURL(f); }))).then(a => cb(a.filter(Boolean)));
+}
+const phHtml = (L, k) => L.map((s, i) => `<div class="ph"><img src="${s}" onclick="phOpen('${k}','',${i})"><button type="button" class="x" onclick="phDel('${k}',${i})">×</button></div>`).join('');
+const phThumbs = v => { const L = v.photos || []; if (!L.length) return '<small style="color:#6b7280">-</small>';
+  return '<div class="ph-grid">' + L.slice(0, 3).map((s, i) => `<div class="ph ph-s"><img src="${s}" onclick="phOpen('v','${v.id}',${i})"></div>`).join('') + (L.length > 3 ? `<button class="sm" onclick="phOpen('v','${v.id}',3)">+${L.length - 3}</button>` : '') + '</div>'; };
+const phList = (k, id) => k === 'p' ? svcPh : k === 'e' ? veSt.photos : ((S.visits.find(v => v.id === id) || {}).photos || []);
+let phSt = { k: '', id: '', i: 0 };
+function phDraw() {
+  const L = phList(phSt.k, phSt.id); if (!L.length) { $('ph-view').classList.add('hide'); return; }
+  phSt.i = (phSt.i + L.length) % L.length; $('ph-big').src = L[phSt.i];
+  const v = phSt.k === 'v' && S.visits.find(x => x.id === phSt.id); $('ph-cap').textContent = (v ? dmy(v.date) + ' · ' + v.service + '  ' : '') + (phSt.i + 1) + ' / ' + L.length;
+}
+window.phOpen = (k, id, i) => { phSt = { k, id, i }; phDraw(); $('ph-view').classList.remove('hide'); };
+window.phStep = d => { phSt.i += d; phDraw(); };
+window.phDel = (k, i) => { if (k === 'p') { svcPh.splice(i, 1); $('cs-prev').innerHTML = phHtml(svcPh, 'p'); } else { veSt.photos.splice(i, 1); veRender(); } };
+window.svcAddPh = el => readPhotos(el.files, a => { svcPh.push(...a); el.value = ''; $('cs-prev').innerHTML = phHtml(svcPh, 'p'); });
+const veRender = () => { $('ve-ph').innerHTML = phHtml(veSt.photos, 'e'); };
+window.editVisit = id => { const v = S.visits.find(x => x.id === id); if (!v) return;
+  veSt = { id, photos: (v.photos || []).slice() }; $('ve-date').value = v.date; $('ve-svc').value = v.service; $('ve-staff').value = v.staff || ''; $('ve-notes').value = v.notes || ''; $('ve-cond').value = v.cond || '';
+  veRender(); $('vs-modal').classList.remove('hide'); };
+$('ve-file').onchange = e => readPhotos(e.target.files, a => { veSt.photos.push(...a); e.target.value = ''; veRender(); });
+$('ve-cancel').onclick = () => $('vs-modal').classList.add('hide');
+$('ve-save').onclick = () => { const v = S.visits.find(x => x.id === veSt.id), date = $('ve-date').value, svc = $('ve-svc').value.trim();
+  if (!v) return $('vs-modal').classList.add('hide'); if (!date || !svc) return alert('Date and service are required.');
+  Object.assign(v, { date, service: svc, staff: $('ve-staff').value.trim(), notes: $('ve-notes').value.trim(), cond: $('ve-cond').value.trim(), photos: veSt.photos });
+  $('vs-modal').classList.add('hide'); save(); renderAll(); };
+/* ===== 第七板块：Package Usage Report 直接搬进顾客个人页（复用同一份报告：筛选、CSV、PDF、打印、分享）；退出个人页时搬回 Customers 子页 ===== */
+function rpHome() { const r = $('cu-report'); if (r.parentElement.id === 't-customers') return; $('cu-main').after(r); $('rp-cust').value = ''; cuSub(cuW); renderReport(); }
+function rpAdopt(c, fresh) {
+  const slot = $('pf-rpt-slot'), r = $('cu-report'); if (!slot) return; slot.appendChild(r); r.classList.remove('hide');
+  if (fresh) { $('rp-status').value = ''; $('rp-from').value = ''; $('rp-to').value = ''; }
+  $('rp-cust').innerHTML = '<option value="">All customers</option>' + S.customers.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join(''); $('rp-cust').value = c.id; renderReport();
+}
+window.delVisit = id => { if (!confirm('Delete this service record, including its condition notes and photos?\n(If it used a package, the session is returned to the package.)')) return; const dv = S.visits.find(v => v.id === id); if (dv && dv.apptId) { const ap = S.appts.find(a => a.id === dv.apptId); if (ap) ap.status = 'Booked'; } S.visits = S.visits.filter(v => v.id !== id); save(); renderAll(); };
 function renderCustDetail() {
-  const el = $('cu-detail'), c = S.customers.find(x => x.id === openCust); if (!c) { el.innerHTML = ''; return; }
+  rpHome();
+  const el = $('cu-detail'), c = S.customers.find(x => x.id === openCust); $('t-customers').classList.toggle('profile', !!c);   // 个人页模式：隐藏列表和表单
+  if (!c) { el.innerHTML = ''; return; }
+  const newCust = pfCust !== c.id; if (newCust) svcPh = [];
+  const fv = svcEditId ? S.visits.find(v => v.id === svcEditId && v.custId === c.id) : null, fvPk = fv && S.packages.find(k => k.id === fv.pkgId);
+  if (fv && svcLoad !== fv.id) { svcPh = (fv.photos || []).slice(); svcLoad = fv.id; } if (!fv) { svcEditId = null; svcLoad = null; }
   const pk = S.packages.filter(k => k.custId === c.id).sort((a, b) => b.date.localeCompare(a.date)), invs = S.invoices.filter(v => v.custId === c.id);
   const vs = S.visits.filter(v => v.custId === c.id).sort((a, b) => b.date.localeCompare(a.date)), act = pk.filter(k => pkgStat(k).st === 'Active');
   const inv = id => (S.invoices.find(v => v.id === id) || {}).no || '-';
-  el.innerHTML = `<div class="card"><div class="row"><h2>${esc(c.name)}</h2><button class="sm" onclick="closeCust()">Close</button></div>
-    <div style="color:#6b7280">${[c.phone, c.email, c.dob && 'Birthday: ' + dmy(c.dob)].filter(Boolean).map(esc).join(' · ')}${c.address ? '<br>' + esc(c.address) : ''}${c.notes ? '<br><b>Notes:</b> ' + esc(c.notes) : ''}</div></div>
-    <div class="card"><h2 style="margin-bottom:10px">Record Service</h2><div class="grid">
-      <div><label>Date</label><input type="date" id="cs-date" value="${today()}"></div>
-      <div><label>Deduct from package</label><select id="cs-pkg" onchange="svcFill()"><option value="">Walk-in / no package</option>${act.map(k => `<option value="${k.id}">${esc(k.name)} (${pkgStat(k).rem} left)</option>`).join('')}</select></div>
-      <div><label>Service performed</label><input id="cs-svc"></div><div><label>Staff</label><input id="cs-staff"></div>
-      <div style="grid-column:span 2"><label>Notes</label><input id="cs-notes"></div><div><button class="btn" onclick="addVisit()">Record Service</button></div></div></div>
+  const ck = custStat(c), left = act.reduce((t, k) => t + pkgStat(k).rem, 0), last = vs[0] ? vs[0].date : '';
+  const nxt = S.appts.filter(a => a.custId === c.id && ['Booked', 'Confirmed'].includes(a.status) && a.date >= today()).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
+  const kp = (t, v, cl = '') => `<div class="card kpi"><small>${t}</small><b class="${cl}">${v}</b></div>`;
+  el.innerHTML = `<div class="card pf-head"><div class="row"><button class="sm" onclick="closeCust()">← All customers</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="sm" onclick="newInvFor('${c.id}')">New Invoice</button><button class="sm" onclick="apNewFor('${c.id}')">Book</button><button class="sm" onclick="custStatement('${c.id}')">Statement</button><button class="sm" onclick="closeCust();editCust('${c.id}')">Edit details</button></div></div>
+    <h2 style="font-size:22px;margin:4px 0">${esc(c.name)}</h2>
+    <div style="color:#6b7280">${[c.phone, c.email, c.dob && 'Birthday: ' + dmy(c.dob)].filter(Boolean).map(esc).join(' · ')}${c.address ? '<br>' + esc(c.address) : ''}${c.notes ? '<br><b>Notes:</b> ' + esc(c.notes) : ''}</div>
+    <div class="cards" style="margin-top:12px">${kp('Wallet balance', fmt(walletBal(c.id)))}${kp('A/R outstanding', fmt(ck.out), ck.od ? 'neg' : '')}${kp('Sessions left', left)}${kp('Last visit', last ? dmy(last) : '-')}${kp('Next appointment', nxt ? dmy(nxt.date) + ' ' + nxt.time : '-')}</div>
+    <div class="pf-nav"><button class="sm" onclick="pfGo('pf-service')">Record Service</button><button class="sm" onclick="pfGo('pf-wallet')">Member Wallet</button><button class="sm" onclick="pfGo('pf-appt')">Appointments</button><button class="sm" onclick="pfGo('pf-pkg')">Packages</button><button class="sm" onclick="pfGo('pf-hist')">Service History</button><button class="sm" onclick="pfGo('pf-inv')">Invoices</button><button class="sm" onclick="pfGo('pf-rpt')">Package Usage Report</button></div></div>
+    <div class="card" id="pf-service"><h2 style="margin-bottom:10px">Record Service${fv ? ' — appointment completed' : ''}</h2>${fv ? '<div class="badge b-paid" style="display:block;border-radius:8px;margin-bottom:10px;padding:6px 10px">Appointment marked Completed. Add the service notes, customer condition and photos below, then save. (The session is already counted.)</div>' : ''}<div class="grid">
+      <div><label>Date</label><input type="date" id="cs-date" value="${fv ? fv.date : today()}"></div>
+      <div><label>${fv ? 'Package used' : 'Deduct from package'}</label><select id="cs-pkg" onchange="svcFill()"${fv ? ' disabled' : ''}>${fv ? `<option value="${fv.pkgId || ''}">${fvPk ? esc(fvPk.name) : 'Walk-in / no package'}</option>` : `<option value="">Walk-in / no package</option>${act.map(k => `<option value="${k.id}">${esc(k.name)} (${pkgStat(k).rem} left)</option>`).join('')}`}</select></div>
+      <div><label>Service performed</label><input id="cs-svc" value="${fv ? esc(fv.service) : ''}"></div><div><label>Staff</label><input id="cs-staff" value="${fv ? esc(fv.staff || '') : ''}"></div>
+      <div style="grid-column:span 2"><label>Notes</label><input id="cs-notes" value="${fv ? esc(fv.notes || '') : ''}"></div>
+      <div style="grid-column:1/-1"><label>Customer condition / treatment details</label><textarea id="cs-cond" rows="3" placeholder="e.g. skin condition, concerns, products used, reaction, advice given">${fv ? esc(fv.cond || '') : ''}</textarea></div>
+      <div style="grid-column:1/-1"><label>Photos (before / after)</label><input type="file" id="cs-file" accept="image/*" multiple onchange="svcAddPh(this)"><div id="cs-prev" class="ph-grid" style="margin-top:6px">${phHtml(svcPh, 'p')}</div></div>
+      <div><button class="btn" onclick="addVisit()">${fv ? 'Save Service Details' : 'Record Service'}</button>${fv ? ' <button class="sm" style="padding:9px 14px" onclick="svcCancel()">Later</button>' : ''}</div></div></div>
     ${walletCard(c)}${apptCard(c)}
-    <div class="card"><h2 style="margin-bottom:10px">Packages</h2><div class="tw"><table><thead><tr><th>Package</th><th>Invoice</th><th>Purchased</th><th>Expiry</th><th class="r">Total</th><th class="r">Used</th><th class="r">Remaining</th><th>Status</th><th></th></tr></thead><tbody>
+    <div class="card" id="pf-pkg"><h2 style="margin-bottom:10px">Packages</h2><div class="tw"><table><thead><tr><th>Package</th><th>Invoice</th><th>Purchased</th><th>Expiry</th><th class="r">Total</th><th class="r">Used</th><th class="r">Remaining</th><th>Status</th><th></th></tr></thead><tbody>
       ${pk.map(k => { const s = pkgStat(k); return `<tr><td>${esc(k.name)}</td><td>${inv(k.invId)}</td><td>${dmy(k.date)}</td><td>${k.expiry ? dmy(k.expiry) : '-'}</td><td class="r">${k.total}</td><td class="r">${s.used}</td><td class="r"><b>${s.rem}</b></td>
         <td><span class="badge ${s.st === 'Active' ? 'b-paid' : s.st === 'Expired' ? 'b-out' : 'b-unpaid'}">${s.st}</span></td><td>${s.st === 'Active' ? `<button class="sm" onclick="usePkg('${k.id}')">Use 1 session</button>` : ''}</td></tr>`; }).join('') || empty(9)}</tbody></table></div></div>
-    <div class="card"><h2 style="margin-bottom:10px">Service History</h2><div class="tw"><table><thead><tr><th>Date</th><th>Package</th><th>Service</th><th>Staff</th><th>Notes</th><th></th></tr></thead><tbody>
-      ${vs.map(v => { const k = S.packages.find(x => x.id === v.pkgId); return `<tr><td>${dmy(v.date)}</td><td>${k ? esc(k.name) : '<small style="color:#6b7280">Walk-in</small>'}</td><td>${esc(v.service)}</td><td>${esc(v.staff)}</td><td style="white-space:normal">${esc(v.notes)}</td><td><button class="sm del" onclick="delVisit('${v.id}')">Delete</button></td></tr>`; }).join('') || empty(6)}</tbody></table></div></div>
-    <div class="card"><h2 style="margin-bottom:10px">Invoices</h2><div class="tw"><table><thead><tr><th>No.</th><th>Date</th><th class="r">Total</th><th class="r">Outstanding</th><th>Status</th><th></th></tr></thead><tbody>
-      ${invs.map(v => { const s = invStat(v); return `<tr><td>${v.no}</td><td>${dmy(v.date)}</td><td class="r">${fmt(v.total)}</td><td class="r">${fmt(s.out)}</td><td><span class="badge ${bcls(s.label)}">${s.label}</span></td><td><button class="sm" onclick="showInvoice('${v.id}')">View</button></td></tr>`; }).join('') || empty(6)}</tbody></table></div></div>`;
+    <div class="card" id="pf-hist"><h2 style="margin-bottom:10px">Service History</h2><div class="tw"><table><thead><tr><th>Date</th><th>Package</th><th>Service</th><th>Staff</th><th>Notes / Condition</th><th>Photos</th><th></th></tr></thead><tbody>
+      ${vs.map(v => { const k = S.packages.find(x => x.id === v.pkgId); return `<tr><td>${dmy(v.date)}</td><td>${k ? esc(k.name) : '<small style="color:#6b7280">Walk-in</small>'}</td><td>${esc(v.service)}</td><td>${esc(v.staff)}</td><td style="white-space:normal;min-width:200px">${esc(v.notes)}${v.cond ? `<div style="margin-top:3px;white-space:pre-wrap"><b>Condition:</b> ${esc(v.cond)}</div>` : ''}</td><td>${phThumbs(v)}</td><td><button class="sm" onclick="editVisit('${v.id}')">Edit</button><button class="sm del" onclick="delVisit('${v.id}')">Delete</button></td></tr>`; }).join('') || empty(7)}</tbody></table></div></div>
+    <div class="card" id="pf-inv"><h2 style="margin-bottom:10px">Invoices</h2><div class="tw"><table><thead><tr><th>No.</th><th>Date</th><th class="r">Total</th><th class="r">Outstanding</th><th>Status</th><th></th></tr></thead><tbody>
+      ${invs.map(v => { const s = invStat(v); return `<tr><td>${v.no}</td><td>${dmy(v.date)}</td><td class="r">${fmt(v.total)}</td><td class="r">${fmt(s.out)}</td><td><span class="badge ${bcls(s.label)}">${s.label}</span></td><td><button class="sm" onclick="showInvoice('${v.id}')">View</button></td></tr>`; }).join('') || empty(6)}</tbody></table></div></div>
+    <div class="card" id="pf-rpt"><h2 style="margin-bottom:10px">Package Usage Report</h2><div id="pf-rpt-slot"></div></div>`;
+  if (pfCust !== c.id) { pfOpen.clear(); pfCust = c.id; }                                                   // 换一位顾客：全部重新折叠
+  const upc = S.appts.filter(a => a.custId === c.id && ['Booked', 'Confirmed'].includes(a.status) && a.date >= today()).length;
+  pfCollapsible({ 'pf-appt': upc + ' upcoming', 'pf-pkg': act.length + ' active · ' + pk.length + ' total', 'pf-hist': vs.length + (vs.length === 1 ? ' record' : ' records'), 'pf-inv': invs.length + (invs.length === 1 ? ' invoice' : ' invoices'), 'pf-rpt': pk.length + (pk.length === 1 ? ' package' : ' packages') });
+  rpAdopt(c, newCust);
 }
 
 /* ===== 发票 Edit / Void ===== */
@@ -978,8 +1093,8 @@ function renderReport() {
     <tr><td colspan="13" style="color:#6b7280;font-size:11px;white-space:normal">Remaining and unused value count active packages only; unused sessions of expired packages are shown in the summary above.</td></tr>`;
 }
 window.repOpen = id => { cuSub('list'); openCustomer(id); };
-function cuSub(w) { $('cu-main').classList.toggle('hide', w !== 'list'); $('cu-report').classList.toggle('hide', w !== 'rep'); $('cs-t1').classList.toggle('on', w === 'list'); $('cs-t2').classList.toggle('on', w === 'rep'); }
-$('cs-t1').onclick = () => cuSub('list'); $('cs-t2').onclick = () => cuSub('rep');
+let cuW = 'list';
+function cuSub(w) { cuW = w; $('cu-main').classList.toggle('hide', w !== 'list'); $('cu-report').classList.toggle('hide', w !== 'rep'); }
 ['rp-cust', 'rp-status', 'rp-from', 'rp-to'].forEach(i => $(i).onchange = renderReport);
 
 $('rp-csv').onclick = () => {
@@ -1038,10 +1153,10 @@ async function invoicePdf() {
   for (let i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
   return makePdf(jpg, cv.width, cv.height);
 }
-const saveBlob = async (blob, name) => {          // 发布页中直接下载无效：改用 downloads 能力，由查看者确认保存
-  const d = await claude.use('downloads');
-  if (!d) return alert('Saving files is not available in this view.');
-  try { await d.save({ filename: name, data: blob }); } catch (e) { if (e && e.code !== 'declined') alert('Could not save the file: ' + (e.message || e.code)); }
+const saveBlob = async (blob, name) => {          // 保存文件：在 Claude 网页版里走 downloads 能力；本地双击 / 普通浏览器直接下载
+  let d = null; try { if (typeof claude !== 'undefined' && claude.use) d = await claude.use('downloads'); } catch (e) { d = null; }
+  if (d) { try { await d.save({ filename: name, data: blob }); } catch (e) { if (e && e.code !== 'declined') alert('Could not save the file: ' + (e.message || e.code)); } return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 };
 window.downloadInvoicePDF = async () => {
   try { await saveBlob(await invoicePdf(), invFileName() + '.pdf'); }
@@ -1176,7 +1291,7 @@ function walletCard(c) {
   S.topups.filter(t => t.custId === c.id).forEach(t => rows.push({ d: t.date, t: 'Top-up', ref: t.no, a: t.amount + (t.bonus || 0), note: t.method + (t.bonus ? ' · incl. ' + fmt(t.bonus) + ' bonus' : ''), id: t.id, void: t.void }));
   S.payments.filter(p => p.method === 'Member Wallet').forEach(p => { const v = S.invoices.find(i => i.id === p.invId); if (v && v.custId === c.id) rows.push({ d: p.date, t: 'Used', ref: v.no, a: -p.amount, note: 'paid invoice' }); });
   rows.sort((a, b) => b.d.localeCompare(a.d));
-  return `<div class="card"><div class="row"><h2>Member Wallet</h2><b style="font-size:20px">${fmt(walletBal(c.id))}</b></div>
+  return `<div class="card" id="pf-wallet"><div class="row"><h2>Member Wallet</h2><b style="font-size:20px">${fmt(walletBal(c.id))}</b></div>
     <div class="grid"><div><label>Top-up amount received (MYR)</label><input type="number" id="tu-amt" min="1" step="0.01"></div><div><label>Bonus credit (optional)</label><input type="number" id="tu-bonus" min="0" step="0.01"></div>
       <div><label>Date</label><input type="date" id="tu-date" value="${today()}"></div>
       <div><label>Payment method</label><select id="tu-pay"><option>Cash</option><option>Bank Transfer</option><option>Cheque</option><option>Card</option><option>EWallet / QR</option></select></div>
@@ -1336,6 +1451,13 @@ window.apStatus = (id, st) => {
   if (a.status === 'Completed') S.visits = S.visits.filter(v => v.apptId !== a.id);    // 取消“完成”：撤销服务记录并返还次数
   a.status = st; save(); renderAll();
 };
+// Completed Service：标记预约已完成（自动生成服务记录、扣减配套次数），随后跳到顾客页的 Record Service 补充备注 / 护理情况 / 照片
+window.apComplete = id => {
+  let a = S.appts.find(x => x.id === id); if (!a) return;
+  if (a.status !== 'Completed') apStatus(id, 'Completed');
+  a = S.appts.find(x => x.id === id); const v = a && a.status === 'Completed' && S.visits.find(x => x.apptId === id); if (!v) return;
+  switchTab('customers'); cuSub('list'); openCustomer(a.custId); svcEditId = v.id; renderCustDetail(); pfGo('pf-service');
+};
 window.apDel = id => { if (!confirm('Delete this appointment?')) return; S.visits = S.visits.filter(v => v.apptId !== id); S.appts = S.appts.filter(a => a.id !== id); save(); renderAll(); };
 // 开单：跳到开单页并预填客户与服务；发票保存后自动与该预约关联（进入 A/R）
 window.apBill = id => {
@@ -1399,8 +1521,9 @@ function renderReminders() {
 }
 $('rm-range').onchange = renderReminders;
 
-/* ===== 日程图：24 小时时间轴（日 / 周视图），点空白处新建、点预约块编辑 ===== */
+/* ===== 日程图：时间轴（日 / 周视图，只显示营业时段），点空白处新建、点预约块编辑 ===== */
 const HP = 48;                                        // 每小时 48px
+const T0 = 7, T1 = 18;                                // 时间轴显示 07:00 – 18:00（要改时段只需改这两个数字）
 let scView = 'day', tlScroll = null;
 const stCol = { Booked: '#fef3c7', Confirmed: '#dbeafe', Completed: '#dcfce7', 'No-show': '#fee2e2', Cancelled: '#e5e7eb' };
 function tlLayout(list) {                             // 重叠的预约并排显示：同一时间簇内按“车道”分配宽度
@@ -1412,20 +1535,21 @@ window.apSlot = (date, time) => { resetApForm(); $('ap-date').value = date; $('a
 function renderTimeline() {
   const dow = new Date(scDate + 'T00:00').getDay(), mon = addDays(scDate, -((dow + 6) % 7)), days = scView === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(mon, i)) : [scDate];
   const n = days.length, minCol = n > 1 ? 120 : 200, tpl = `52px repeat(${n}, minmax(${minCol}px, 1fr))`, minW = 52 + n * minCol, now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
-  const hours = Array.from({ length: 24 }, (_, h) => `<div class="tl-h" style="height:${HP}px"><span>${String(h).padStart(2, '0')}:00</span></div>`).join('');
+  const hours = Array.from({ length: T1 - T0 }, (_, i) => `<div class="tl-h" style="height:${HP}px"><span>${String(T0 + i).padStart(2, '0')}:00</span></div>`).join('');
   const heads = days.map(d => { const L = lunar(d); return `<div class="tl-dh ${d === today() ? 'td' : ''}"><b>${wday(d)} ${d.slice(8)}/${d.slice(5, 7)}</b>${L ? `<br><small class="${L.fest ? 'fest' : ''}">${L.fest ? L.fest + ' · ' : ''}${L.full}</small>` : ''}</div>`; }).join('');
   const cols = days.map(d => {
     const list = S.appts.filter(a => a.date === d && a.status !== 'Cancelled').sort((a, b) => a.time.localeCompare(b.time));
-    const blocks = tlLayout(list).map(it => { const a = it.a, c = apCust(a.custId), hgt = Math.max((it.e - it.s) / 60 * HP, 22);
-      return `<div class="tl-ev" style="top:${it.s / 60 * HP}px;height:${hgt}px;left:calc(${it.lane / it.n * 100}% + 1px);width:calc(${100 / it.n}% - 2px);background:${stCol[a.status]}" onclick="event.stopPropagation();apEdit('${a.id}')" title="${esc(c.name)} · ${esc(a.service)} · ${a.status}"><b>${a.time}</b> ${esc(c.name)}${a.remindedAt ? ' 📱' : ''}<br><small>${esc(a.service)}${a.staff ? ' · ' + esc(a.staff) : ''}</small></div>`; }).join('');
-    return `<div class="tl-col" data-date="${d}">${d === today() ? `<div class="tl-now" style="top:${nowMin / 60 * HP}px"></div>` : ''}${blocks}</div>`; }).join('');
-  $('sc-grid').innerHTML = `<div class="tl" id="tl"><div class="tl-head" style="grid-template-columns:${tpl};min-width:${minW}px"><div></div>${heads}</div><div class="tl-body" style="grid-template-columns:${tpl};min-width:${minW}px;height:${24 * HP}px"><div class="tl-axis">${hours}</div>${cols}</div></div>`;
+    const blocks = tlLayout(list).filter(it => it.e > T0 * 60 && it.s < T1 * 60).map(it => { const a = it.a, c = apCust(a.custId), vs = Math.max(it.s, T0 * 60), ve = Math.min(it.e, T1 * 60), hgt = Math.max((ve - vs) / 60 * HP, 22);
+      return `<div class="tl-ev" style="top:${(vs - T0 * 60) / 60 * HP}px;height:${hgt}px;left:calc(${it.lane / it.n * 100}% + 1px);width:calc(${100 / it.n}% - 2px);background:${stCol[a.status]}" onclick="event.stopPropagation();apEdit('${a.id}')" title="${esc(c.name)} · ${esc(a.service)} · ${a.status}"><b>${a.time}</b> ${esc(c.name)}${a.remindedAt ? ' 📱' : ''}<br><small>${esc(a.service)}${a.staff ? ' · ' + esc(a.staff) : ''}</small></div>`; }).join('');
+    return `<div class="tl-col" data-date="${d}">${d === today() && nowMin >= T0 * 60 && nowMin < T1 * 60 ? `<div class="tl-now" style="top:${(nowMin - T0 * 60) / 60 * HP}px"></div>` : ''}${blocks}</div>`; }).join('');
+  $('sc-grid').innerHTML = `<div class="tl" id="tl"><div class="tl-head" style="grid-template-columns:${tpl};min-width:${minW}px"><div></div>${heads}</div><div class="tl-body" style="grid-template-columns:${tpl};min-width:${minW}px;height:${(T1 - T0) * HP}px"><div class="tl-axis">${hours}</div>${cols}</div></div>`;
   const box = $('tl'); box.onscroll = () => { tlScroll = box.scrollTop; };
   box.querySelectorAll('.tl-col').forEach(col => col.onclick = e => {   // 点空白处：按点击位置取整到 30 分钟，预填新预约
-    const y = e.clientY - col.getBoundingClientRect().top, mins = Math.min(23 * 60 + 30, Math.floor(y / HP * 2) * 30);
+    const y = e.clientY - col.getBoundingClientRect().top, mins = T0 * 60 + Math.min((T1 - T0) * 60 - 30, Math.max(0, Math.floor(y / HP * 2) * 30));
     apSlot(col.dataset.date, String(Math.floor(mins / 60)).padStart(2, '0') + ':' + String(mins % 60).padStart(2, '0')); });
-  const first = S.appts.filter(a => days.includes(a.date) && a.status !== 'Cancelled').map(a => toMin(a.time)).sort((a, b) => a - b)[0];
-  box.scrollTop = tlScroll != null ? tlScroll : Math.max(0, ((first != null ? Math.min(first, 8 * 60) : 8 * 60) / 60 - 0.5) * HP);
+  box.scrollTop = tlScroll != null ? tlScroll : 0;
+  const out = S.appts.filter(a => days.includes(a.date) && a.status !== 'Cancelled' && (toMin(a.time) + Math.max(a.dur || 60, 20) <= T0 * 60 || toMin(a.time) >= T1 * 60)).length;   // 时段外的预约不在时间轴上画，提示一下
+  if (out) $('sc-grid').insertAdjacentHTML('beforeend', `<small style="color:#d97706;display:block;margin-top:6px">${out} appointment${out === 1 ? '' : 's'} outside ${String(T0).padStart(2, '0')}:00–${String(T1).padStart(2, '0')}:00 not shown on the timeline — see the list below.</small>`);
 }
 window.scGo = d => { scDate = d || today(); renderSchedule(); };
 const scStep = k => addDays(scDate, scView === 'week' ? 7 * k : k);
@@ -1452,26 +1576,51 @@ function renderSchedule() {
     const pk = S.packages.find(x => x.id === a.pkgId), cancelled = ['Cancelled', 'No-show'].includes(a.status);
     return `<tr${cancelled ? ' style="opacity:.55"' : ''}><td><b>${a.time}</b><br><small style="color:#6b7280">${a.dur} min</small></td><td>${esc(c.name)}</td><td>${esc(a.service)}${pk ? `<br><small style="color:#6b7280">package: ${pkgStat(pk).rem} left</small>` : ''}</td><td>${esc(a.staff || '')}</td>
       <td><select style="width:auto" onchange="apStatus('${a.id}',this.value)">${AP_ST.map(s => `<option${s === a.status ? ' selected' : ''}>${s}</option>`).join('')}</select></td><td>${ar}</td>
-      <td>${cancelled ? '' : `<button class="sm" onclick="apRemind('${a.id}')">${a.remindedAt ? 'Reminded ✓' : 'Remind'}</button>`}${a.status === 'Completed' ? '' : `<button class="sm" onclick="apEdit('${a.id}')">Edit</button>`}
+      <td>${cancelled ? '' : `<button class="sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="apComplete('${a.id}')">${a.status === 'Completed' ? 'Service Details' : 'Completed Service'}</button>`}${cancelled ? '' : `<button class="sm" onclick="apRemind('${a.id}')">${a.remindedAt ? 'Reminded ✓' : 'Remind'}</button>`}${a.status === 'Completed' ? '' : `<button class="sm" onclick="apEdit('${a.id}')">Edit</button>`}
       ${!a.pkgId && !a.invId && !cancelled ? `<button class="sm" onclick="apBill('${a.id}')">Bill</button>` : ''}<button class="sm del" onclick="apDel('${a.id}')">Delete</button></td></tr>`; }).join('') || empty(7);
 }
 
 function apptCard(c) {
   const L = S.appts.filter(a => a.custId === c.id).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)).slice(0, 10);
-  return `<div class="card"><div class="row"><h2>Appointments</h2><button class="sm" onclick="apNewFor('${c.id}')">+ Book</button></div><div class="tw"><table><thead><tr><th>Date</th><th>Time</th><th>Service</th><th>Staff</th><th>Status</th></tr></thead><tbody>
-    ${L.map(a => `<tr><td>${dmy(a.date)}</td><td>${a.time}</td><td>${esc(a.service)}</td><td>${esc(a.staff || '')}</td><td><span class="badge ${apBadge[a.status]}">${a.status}</span></td></tr>`).join('') || empty(5)}</tbody></table></div></div>`;
+  return `<div class="card" id="pf-appt"><div class="row"><h2>Appointments</h2><button class="sm" onclick="apNewFor('${c.id}')">+ Book</button></div><div class="tw"><table><thead><tr><th>Date</th><th>Time</th><th>Service</th><th>Staff</th><th>Status</th><th></th></tr></thead><tbody>
+    ${L.map(a => `<tr><td>${dmy(a.date)}</td><td>${a.time}</td><td>${esc(a.service)}</td><td>${esc(a.staff || '')}</td><td><span class="badge ${apBadge[a.status]}">${a.status}</span></td><td>${['Cancelled', 'No-show'].includes(a.status) ? '' : `<button class="sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="apComplete('${a.id}')">${a.status === 'Completed' ? 'Service Details' : 'Completed Service'}</button>`}</td></tr>`).join('') || empty(6)}</tbody></table></div></div>`;
 }
+
+/* ===== 页内对话框：浏览器自带的 confirm / alert 在嵌入式页面（如 Claude 内打开）里可能被拦截，导致“点了没反应、无法删除”。
+   这里统一换成页面内的弹窗；删除类操作会明确提示“无法恢复”。原有各函数里的 confirm(...) 无需改动：弹窗点确定后自动重新执行该操作。 ===== */
+let dlgFn = null;
+function dlgShow(title, msg, okLabel, fn, danger, noCancel) {
+  $('dlg-t').textContent = title; $('dlg-m').textContent = msg; dlgFn = fn;
+  const ok = $('dlg-ok'); ok.textContent = okLabel; ok.style.background = danger ? '#dc2626' : ''; $('dlg-no').classList.toggle('hide', !!noCancel);
+  $('dlg').classList.remove('hide'); (noCancel ? ok : $('dlg-no')).focus();                 // 危险操作默认聚焦“取消”，防止误按回车
+}
+const dlgClose = () => { $('dlg').classList.add('hide'); dlgFn = null; };
+function dlgAsk(msg, fn, label, danger) { dlgShow(danger ? 'Are you sure?' : 'Please confirm', msg + (danger ? '\n\nThis cannot be undone. 删除后无法恢复。' : ''), label, fn, danger); }
+$('dlg-ok').onclick = () => { const f = dlgFn; dlgClose(); if (f) f(); };
+$('dlg-no').onclick = dlgClose; $('dlg').onclick = e => { if (e.target === $('dlg')) dlgClose(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('dlg').classList.contains('hide')) dlgClose(); });
+window.alert = m => dlgShow('Notice', String(m), 'OK', null, false, true);
+let cfPass = false, cfRetry = null;
+window.confirm = m => {
+  if (cfPass) { cfPass = false; return true; }
+  const r = cfRetry, msg = String(m), soft = /Book anyway/.test(msg), lbl = soft ? 'Book anyway' : /^Void/.test(msg) ? 'Void' : /^Replace/.test(msg) ? 'Replace' : 'Delete';
+  dlgAsk(msg, () => { cfPass = true; try { r && r(); } finally { cfPass = false; } }, lbl, !soft);
+  return false;
+};
+['delEntry', 'delPayment', 'delInvoice', 'delCust', 'delProd', 'delVisit', 'voidTopup', 'delTopup', 'apDel'].forEach(n => { const f = window[n]; window[n] = (...a) => { cfRetry = () => f(...a); return f(...a); }; });
+{ const f = $('ap-save').onclick; $('ap-save').onclick = () => { cfRetry = () => f(); return f(); }; }
 
 /* ===== 页面初始化 ===== */
 function renderBrand() { $('brand').innerHTML = (S.co.logo ? `<img src="${S.co.logo}" style="max-height:40px;max-width:120px;vertical-align:middle;margin-right:8px">` : '📒 ') + esc(S.co.name || 'Micro Bookkeeping'); }
 function renderAll() { renderBrand(); renderKpis(); renderEntries(); renderInvoices(); fillCustSel(); renderCustomers(); renderCustDetail(); renderReport(); renderInventory(); renderSchedule(); renderAR(); renderPL(); renderBS(); renderAccounts(); renderSettings(); }
 const TABS = ['ledger', 'invoices', 'schedule', 'customers', 'inventory', 'ar', 'pl', 'bs', 'accounts', 'settings'];
 function switchTab(t) { document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === t)); TABS.forEach(k => $('t-' + k).classList.toggle('hide', k !== t)); }
-document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { if (b.dataset.tab === 'customers' && typeof openCust !== 'undefined' && openCust) closeCust(); switchTab(b.dataset.tab); });
 ['pl-from', 'pl-to'].forEach(i => $(i).onchange = renderPL); $('bs-date').onchange = renderBS;
 $('ap-date').value = $('e-date').value = $('i-date').value = $('p-date').value = $('pl-to').value = $('bs-date').value = today();
 $('pl-from').value = today().slice(0, 4) + '-01-01'; $('i-tax').value = S.co.taxRate;
-initCloud().catch(e=>{console.error(e); $('cloud-auth-msg').textContent='初始化失败：'+e.message;});
+if (CLOUD_ENABLED) initCloud().catch(e=>{console.error(e); $('cloud-auth-msg').textContent='初始化失败：'+e.message;});
+else { $('cloud-gate').style.display = 'none'; $('cloud-toolbar').style.display = 'none'; migrateTopups(); migrateOR(); loadCompanyForm(); fillAccts(); addRow(); renderAll(); onProfileHash(); }   // 本机模式：直接用 localStorage 里的资料
 </script>
 </body>
 </html>
