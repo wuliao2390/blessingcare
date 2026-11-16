@@ -94,6 +94,22 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  .item{grid-template-columns:1fr 1fr}.item>:nth-child(1),.item>:nth-child(2),.item>:nth-child(7){grid-column:1/-1}.ihead{display:none}   /* 开单明细行改为上下排列 */
  #modal{padding:8px}.row{align-items:flex-start}th,td{padding:8px}
 }
+
+/* ===== Modern Dashboard ===== */
+.dash-wrap{display:grid;gap:14px;margin:0 0 18px}
+.dash-toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.dash-toolbar>div{min-width:135px}.dash-toolbar select,.dash-toolbar input{background:#fff}
+.dash-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.dash-muted{color:var(--mut);font-size:12px}.dash-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dash-kpi{background:linear-gradient(145deg,#fff,#f8fbff);border:1px solid #e5eaf2;border-radius:14px;padding:15px;min-width:0;box-shadow:0 3px 12px #1e293b08}
+.dash-kpi .dk-label{font-size:12px;color:#64748b;display:block}.dash-kpi strong{display:block;font-size:clamp(17px,2vw,24px);margin:5px 0 2px;overflow-wrap:anywhere}.dash-kpi small{font-size:11px;color:#64748b}
+.dash-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.dash-panel{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px;min-width:0;box-shadow:0 3px 12px #1e293b08}.dash-panel h2{margin-bottom:4px}.dash-panel canvas{width:100%;height:220px;display:block}.dash-wide{grid-column:1/-1}
+.dash-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--mut);margin-top:8px}.dash-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.dash-bars{display:grid;gap:9px;margin-top:14px}.dash-bar-row{display:grid;grid-template-columns:minmax(78px,1fr) 3fr auto;gap:8px;align-items:center;font-size:12px}.dash-track{height:9px;border-radius:20px;background:#eef2f7;overflow:hidden}.dash-fill{height:100%;border-radius:20px;background:#3b82f6}.dash-table{width:100%;font-size:12px}.dash-table td{padding:7px 4px;white-space:normal}.dash-table td:last-child{text-align:right;font-weight:600;white-space:nowrap}.dash-pill{display:inline-block;padding:3px 8px;border-radius:20px;background:#eff6ff;color:#1d4ed8;font-size:11px}
+.dash-empty{padding:24px 8px;text-align:center;color:#94a3b8;font-size:12px}.dash-activity{display:grid;gap:0}.dash-act{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:12px}.dash-act:last-child{border:0}.dash-act-main{min-width:0}.dash-act-main b{display:block;overflow-wrap:anywhere}.dash-act-main small{color:var(--mut)}
+@media(max-width:820px){.dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dash-grid{grid-template-columns:1fr}.dash-wide{grid-column:auto}.dash-panel{padding:13px}.dash-panel canvas{height:190px}}
+@media(max-width:390px){.dash-kpi{padding:12px}.dash-kpi strong{font-size:17px}.dash-bar-row{grid-template-columns:76px 1fr auto}}
+
 </style>
 </head>
 <body>
@@ -113,12 +129,35 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 <header><h1 id="brand">📒 Micro Bookkeeping</h1><small style="color:#6b7280">Currency: MYR (RM)</small></header>
 <div id="cloud-toolbar"><b>☁️ Cloud:</b> <span id="cloud-user-label">Not signed in</span><span id="cloud-status">Please sign in</span><span style="flex:1"></span><button class="sm" id="cloud-sync-now">Sync now</button><button class="sm" id="cloud-backup">Download backup</button><button class="sm" id="cloud-logout">Logout</button></div>
 <main>
-  <!-- Dashboard KPIs -->
-  <div class="cards" id="kpis"></div>
+  <div class="tabs" style="flex-wrap:wrap"><button data-tab="dashboard" class="on">Dashboard</button><button data-tab="ledger">Ledger</button><button data-tab="invoices">Invoices</button><button data-tab="schedule">Schedule</button><button data-tab="customers">Customers</button><button data-tab="inventory">Inventory</button><button data-tab="ar">Receivables (A/R)</button><button data-tab="pl">Profit &amp; Loss</button><button data-tab="bs">Balance Sheet</button><button data-tab="accounts">Accounts &amp; Tax</button><button data-tab="settings">Settings</button></div>
 
-  <div class="tabs" style="flex-wrap:wrap"><button data-tab="ledger" class="on">Ledger</button><button data-tab="invoices">Invoices</button><button data-tab="schedule">Schedule</button><button data-tab="customers">Customers</button><button data-tab="inventory">Inventory</button><button data-tab="ar">Receivables (A/R)</button><button data-tab="pl">Profit &amp; Loss</button><button data-tab="bs">Balance Sheet</button><button data-tab="accounts">Accounts &amp; Tax</button><button data-tab="settings">Settings</button></div>
+  <!-- TAB: Dashboard -->
+  <section id="t-dashboard">
+    <div class="dash-wrap">
+      <div class="dash-panel">
+        <div class="dash-head"><div><h2>Business Overview</h2><div class="dash-muted" id="dash-period-label">Financial performance · MYR</div></div><span class="dash-pill">LIVE DATA</span></div>
+        <div class="dash-toolbar" style="margin-top:12px">
+          <div><label>Reporting period</label><select id="dash-range"><option value="month">This Month</option><option value="lastmonth">Last Month</option><option value="quarter">This Quarter</option><option value="year">This Year</option><option value="last12">Last 12 Months</option><option value="all">All Time</option><option value="custom">Custom Range</option></select></div>
+          <div id="dash-from-wrap" class="hide"><label>From</label><input type="date" id="dash-from"></div>
+          <div id="dash-to-wrap" class="hide"><label>To</label><input type="date" id="dash-to"></div>
+          <div><button class="sm" id="dash-refresh" type="button">↻ Refresh</button></div>
+        </div>
+      </div>
+      <div class="dash-kpis" id="dash-kpis"></div>
+      <div class="dash-grid">
+        <div class="dash-panel"><h2>Revenue vs Expenses</h2><div class="dash-muted">Monthly performance for the selected period</div><canvas id="dash-revenue-chart" aria-label="Revenue and expenses chart"></canvas><div class="dash-legend"><span><i class="dash-dot" style="background:#2563eb"></i>Revenue</span><span><i class="dash-dot" style="background:#f59e0b"></i>Expenses</span></div></div>
+        <div class="dash-panel"><h2>Cash Flow</h2><div class="dash-muted">Cash and bank movements by month</div><canvas id="dash-cash-chart" aria-label="Cash flow chart"></canvas><div class="dash-legend"><span><i class="dash-dot" style="background:#10b981"></i>Net movement</span><span><i class="dash-dot" style="background:#94a3b8"></i>Zero line</span></div></div>
+        <div class="dash-panel"><h2>Accounts Receivable</h2><div class="dash-muted">Outstanding balances as at period end</div><div id="dash-ar-summary"></div><div class="dash-bars" id="dash-aging"></div></div>
+        <div class="dash-panel"><h2>Sales Performance</h2><div class="dash-muted">Top products / services by invoiced value</div><div id="dash-products" class="dash-bars"></div></div>
+        <div class="dash-panel"><h2>Customer Insights</h2><div class="dash-muted">Customer base and top customers</div><div id="dash-customer-summary"></div><div id="dash-top-customers" class="dash-bars"></div></div>
+        <div class="dash-panel"><h2>Business Activity</h2><div class="dash-muted">Transactions and operations during selected period</div><div id="dash-activity-kpis" class="dash-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px"></div></div>
+        <div class="dash-panel dash-wide"><div class="dash-head"><div><h2>Recent Activity</h2><div class="dash-muted">Latest invoices, receipts, expenses and bookings</div></div></div><div id="dash-recent" class="dash-activity"></div></div>
+      </div>
+      <div class="dash-muted">Dashboard figures are calculated from your existing journal, invoices, payments, customers and appointments. Amounts are in MYR (RM).</div>
+    </div>
+  </section>
 
-  <!-- TAB 1: Ledger -->
+  <!-- TAB: Ledger -->
   <section id="t-ledger">
     <div class="card">
       <h2 style="margin-bottom:10px">New Entry</h2>
@@ -437,14 +476,65 @@ function post(date, ref, label, lines, pid) {
 // 科目余额 = 借方合计 − 贷方合计
 const bal = acct => r2(S.journal.filter(j => j.acct === acct).reduce((s, j) => s + j.dr - j.cr, 0));
 
-/* ========== 看板：总收入 / 总支出 / 净利润 + 应收 / 应付税款 ========== */
-function renderKpis() {
-  const inc = r2(S.entries.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0));
-  const exp = r2(S.entries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0));
-  const net = r2(inc - exp); // 净利润 = 收入（不含销售税）− 支出
-  const k = (t, v, c = '') => `<div class="card kpi"><small>${t}</small><b class="${c}">${fmt(v)}</b></div>`;
-  $('kpis').innerHTML = k('Total Income', inc, 'pos') + k('Total Expenses', exp, 'neg') + k('Net Profit', net, net >= 0 ? 'pos' : 'neg')
-    + k('Accounts Receivable', bal(SYS.ar)) + k('Sales Tax Payable', -bal(SYS.tax)) + k('Member Deposits', -bal(SYS.dep));
+/* ========== Modern Dashboard：只读取现有账务数据，不改动会计分录 ========== */
+const dashDate = d => { const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()),p=n=>String(n).padStart(2,'0'); return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate()); };
+const dashMonthStart = d => new Date(d.getFullYear(),d.getMonth(),1);
+function dashPeriod(){
+  const now=new Date(), todayStr=today(), mode=$('dash-range')?.value||'month'; let a,b;
+  if(mode==='custom'){a=$('dash-from').value||todayStr;b=$('dash-to').value||todayStr;}
+  else if(mode==='lastmonth'){const x=new Date(now.getFullYear(),now.getMonth()-1,1);a=dashDate(x);b=dashDate(new Date(now.getFullYear(),now.getMonth(),0));}
+  else if(mode==='quarter'){const q=Math.floor(now.getMonth()/3)*3;a=dashDate(new Date(now.getFullYear(),q,1));b=todayStr;}
+  else if(mode==='year'){a=now.getFullYear()+'-01-01';b=todayStr;}
+  else if(mode==='last12'){a=dashDate(new Date(now.getFullYear(),now.getMonth()-11,1));b=todayStr;}
+  else if(mode==='all'){const dates=[...S.journal.map(x=>x.date),...S.invoices.map(x=>x.date),...S.entries.map(x=>x.date)].filter(Boolean).sort();a=dates[0]||todayStr;b=todayStr;}
+  else {a=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';b=todayStr;}
+  if(a>b)[a,b]=[b,a]; return {from:a,to:b,mode};
+}
+const dashInRange=(d,a,b)=>!!d&&d>=a&&d<=b;
+const dashEsc=s=>esc(s);
+function dashDrawBars(canvasId,labels,series){
+  const c=$(canvasId);if(!c)return;const ctx=c.getContext('2d'),w=Math.max(260,c.clientWidth||300),h=parseInt(getComputedStyle(c).height)||210,dpr=window.devicePixelRatio||1;
+  c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  const vals=series.flatMap(x=>x.values).map(Math.abs),max=Math.max(1,...vals),left=38,right=8,top=12,bottom=28,plotW=w-left-right,plotH=h-top-bottom;
+  ctx.font='10px system-ui';ctx.fillStyle='#94a3b8';ctx.strokeStyle='#edf1f6';ctx.lineWidth=1;
+  for(let i=0;i<=3;i++){const y=top+plotH*i/3;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText((max*(1-i/3)>=1000?'RM'+(max*(1-i/3)/1000).toFixed(1)+'k':Math.round(max*(1-i/3))),2,y+3);}
+  const group=plotW/Math.max(1,labels.length),bw=Math.min(18,group/(series.length+1));
+  labels.forEach((lab,i)=>{series.forEach((sr,j)=>{const v=sr.values[i]||0,bh=Math.abs(v)/max*plotH,x=left+i*group+group/2+(j-(series.length-1)/2)*(bw+3)-bw/2,y=top+plotH-bh;ctx.fillStyle=sr.color;ctx.fillRect(x,y,bw,bh);});ctx.fillStyle='#64748b';ctx.textAlign='center';ctx.fillText(lab,left+i*group+group/2,h-8);});ctx.textAlign='left';
+}
+function dashDrawLine(canvasId,labels,values){
+  const c=$(canvasId);if(!c)return;const ctx=c.getContext('2d'),w=Math.max(260,c.clientWidth||300),h=parseInt(getComputedStyle(c).height)||210,dpr=window.devicePixelRatio||1;c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  const max=Math.max(1,...values.map(v=>Math.abs(v))),left=38,right=10,top=14,bottom=28,pw=w-left-right,ph=h-top-bottom,zero=top+ph/2;ctx.strokeStyle='#e8edf4';ctx.beginPath();ctx.moveTo(left,zero);ctx.lineTo(w-right,zero);ctx.stroke();ctx.font='10px system-ui';ctx.fillStyle='#94a3b8';ctx.fillText('0',18,zero+3);
+  ctx.strokeStyle='#10b981';ctx.lineWidth=2.5;ctx.beginPath();values.forEach((v,i)=>{const x=left+(labels.length<=1?pw/2:i*pw/(labels.length-1)),y=zero-v/max*(ph/2-5);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();values.forEach((v,i)=>{const x=left+(labels.length<=1?pw/2:i*pw/(labels.length-1)),y=zero-v/max*(ph/2-5);ctx.fillStyle='#10b981';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#64748b';ctx.textAlign='center';ctx.fillText(labels[i],x,h-8);});ctx.textAlign='left';
+}
+function dashMonthly(from,to){const a=new Date(from+'T00:00:00'),b=new Date(to+'T00:00:00'),out=[];let d=new Date(a.getFullYear(),a.getMonth(),1),limit=0;while(d<=b&&limit++<24){const st=dashDate(d),en=dashDate(new Date(d.getFullYear(),d.getMonth()+1,0)),lo=st<from?from:st,hi=en>to?to:en,p=plData(lo,hi),cash=net(SYS.cash,lo,hi)+net(SYS.bank,lo,hi);out.push({label:d.toLocaleDateString('en-MY',{month:'short'}),revenue:p.ti,expense:p.te,cash});d=new Date(d.getFullYear(),d.getMonth()+1,1);}return out;}
+function dashRender(){
+  const {from,to,mode}=dashPeriod(),p=plData(from,to),cashBal=net(SYS.cash,'',to)+net(SYS.bank,'',to),arInv=S.invoices.filter(v=>!v.void&&v.date<=to).map(v=>({v,s:invStat(v)})).filter(x=>x.s.out>0),arTotal=r2(arInv.reduce((n,x)=>n+x.s.out,0));
+  $('dash-period-label').textContent=(from===to?from:from+' → '+to)+' · '+(S.co.name||'Business')+' · MYR';
+  const k=(label,value,sub,cls='')=>`<div class="dash-kpi"><span class="dk-label">${label}</span><strong class="${cls}">${value}</strong><small>${sub}</small></div>`;
+  const overdue=arInv.filter(x=>x.v.due&&x.v.due<to).reduce((n,x)=>n+x.s.out,0),margin=p.ti? p.np/p.ti*100:0;
+  $('dash-kpis').innerHTML=k('Revenue',fmt(p.ti),'Recognised income · selected period','pos')+k('Expenses',fmt(p.te),'Recorded expenses','neg')+k('Net Profit',fmt(p.np),'Profit margin '+margin.toFixed(1)+'%',p.np>=0?'pos':'neg')+k('Cash & Bank',fmt(cashBal),'Closing balance as at '+to,cashBal>=0?'':'neg')+k('Accounts Receivable',fmt(arTotal),arInv.length+' open invoices')+k('Overdue Receivables',fmt(overdue),'Past due by '+to,overdue?'neg':'')+k('Invoices Issued',String(S.invoices.filter(v=>!v.void&&dashInRange(v.date,from,to)).length),'Excludes void invoices')+k('Average Invoice',fmt((()=>{const l=S.invoices.filter(v=>!v.void&&v.kind!=='topup'&&dashInRange(v.date,from,to));return l.length?l.reduce((n,v)=>n+v.total,0)/l.length:0;})()),'Revenue ÷ invoice count');
+  const monthly=dashMonthly(from,to);dashDrawBars('dash-revenue-chart',monthly.map(x=>x.label),[{values:monthly.map(x=>x.revenue),color:'#2563eb'},{values:monthly.map(x=>x.expense),color:'#f59e0b'}]);dashDrawLine('dash-cash-chart',monthly.map(x=>x.label),monthly.map(x=>x.cash));
+  const aging={'Not yet due':0,'1–30 days':0,'31–60 days':0,'61–90 days':0,'90+ days':0};arInv.forEach(({v,s})=>{const days=v.due&&v.due<to?Math.max(0,Math.floor((new Date(to+'T00:00:00')-new Date(v.due+'T00:00:00'))/864e5)):0;const key=days===0?'Not yet due':days<=30?'1–30 days':days<=60?'31–60 days':days<=90?'61–90 days':'90+ days';aging[key]+=s.out;});
+  $('dash-ar-summary').innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;margin:12px 0"><div><small class="dash-muted">Total outstanding</small><div style="font-size:22px;font-weight:750">${fmt(arTotal)}</div></div><div style="text-align:right"><small class="dash-muted">Overdue</small><div class="neg" style="font-size:18px;font-weight:700">${fmt(overdue)}</div></div></div>`;
+  const ageMax=Math.max(1,...Object.values(aging));$('dash-aging').innerHTML=Object.entries(aging).map(([n,v])=>`<div class="dash-bar-row"><span>${n}</span><div class="dash-track"><div class="dash-fill" style="width:${v/ageMax*100}%;background:${n==='Not yet due'?'#10b981':'#f59e0b'}"></div></div><b>${fmt(v)}</b></div>`).join('');
+  const prodMap=new Map();S.invoices.filter(v=>!v.void&&v.kind!=='topup'&&dashInRange(v.date,from,to)).forEach(v=>(v.items||[]).forEach(it=>{const name=it.item||it.desc||'Unspecified';prodMap.set(name,(prodMap.get(name)||0)+lineTotal(it));}));const prodRows=[...prodMap].sort((a,b)=>b[1]-a[1]).slice(0,5),prodMax=Math.max(1,...prodRows.map(x=>x[1]));
+  $('dash-products').innerHTML=prodRows.length?prodRows.map(([n,v])=>`<div class="dash-bar-row"><span title="${dashEsc(n)}">${dashEsc(n.slice(0,22))}</span><div class="dash-track"><div class="dash-fill" style="width:${v/prodMax*100}%"></div></div><b>${fmt(v)}</b></div>`).join(''):'<div class="dash-empty">No sales recorded in this period.</div>';
+  const newCust=S.customers.filter(c=>{const first=S.invoices.filter(v=>!v.void&&v.custId===c.id).map(v=>v.date).sort()[0];return first&&dashInRange(first,from,to);}).length;
+  const custSales=new Map();S.invoices.filter(v=>!v.void&&v.kind!=='topup'&&dashInRange(v.date,from,to)).forEach(v=>custSales.set(v.custId||v.cust,(custSales.get(v.custId||v.cust)||0)+v.sub));const topCust=[...custSales].sort((a,b)=>b[1]-a[1]).slice(0,5),custMax=Math.max(1,...topCust.map(x=>x[1]));
+  $('dash-customer-summary').innerHTML=`<div class="dash-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:12px 0"><div><small class="dash-muted">Total customers</small><div style="font-size:22px;font-weight:750">${S.customers.length}</div></div><div><small class="dash-muted">New customers</small><div style="font-size:22px;font-weight:750">${newCust}</div></div></div>`;
+  $('dash-top-customers').innerHTML=topCust.length?topCust.map(([id,v])=>{const c=S.customers.find(x=>x.id===id);const name=c?.name||String(id);return `<div class="dash-bar-row"><span title="${dashEsc(name)}">${dashEsc(name.slice(0,22))}</span><div class="dash-track"><div class="dash-fill" style="width:${v/custMax*100}%;background:#8b5cf6"></div></div><b>${fmt(v)}</b></div>`;}).join(''):'<div class="dash-empty">No customer invoices in this period.</div>';
+  const invCount=S.invoices.filter(v=>!v.void&&dashInRange(v.date,from,to)).length,payCount=S.payments.filter(x=>dashInRange(x.date,from,to)).length,entryCount=S.entries.filter(x=>!x.invoiceId&&dashInRange(x.date,from,to)).length,apptCount=S.appts.filter(x=>dashInRange(x.date,from,to)).length;
+  $('dash-activity-kpis').innerHTML=k('Invoices',invCount,'Issued')+k('Receipts',payCount,'Payments received')+k('Ledger entries',entryCount,'Income and expenses')+k('Appointments',apptCount,'Bookings created');
+  const recent=[...S.invoices.filter(v=>dashInRange(v.date,from,to)&&!v.void).map(v=>({date:v.date,type:'Invoice',name:v.no+' · '+v.cust,amount:v.total})),...S.payments.filter(x=>dashInRange(x.date,from,to)).map(x=>{const v=S.invoices.find(i=>i.id===x.invId);return{date:x.date,type:'Receipt',name:(x.no||'Receipt')+(v?' · '+v.cust:''),amount:x.amount};}),...S.entries.filter(x=>!x.invoiceId&&dashInRange(x.date,from,to)).map(x=>({date:x.date,type:x.type==='expense'?'Expense':'Income',name:x.ref+' · '+(x.note||x.acct),amount:x.amount})),...S.appts.filter(x=>dashInRange(x.date,from,to)).map(x=>({date:x.date,type:'Appointment',name:(S.customers.find(c=>c.id===x.custId)||{}).name||'Customer',amount:null}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  $('dash-recent').innerHTML=recent.length?recent.map(x=>`<div class="dash-act"><div class="dash-act-main"><b>${dashEsc(x.name)}</b><small>${x.date} · ${x.type}</small></div><strong>${x.amount==null?'':fmt(x.amount)}</strong></div>`).join(''):'<div class="dash-empty">No activity in this period.</div>';
+}
+function renderKpis(){dashRender();}
+function dashInit(){
+  const range=$('dash-range');if(!range)return;const now=today();$('dash-from').value=now.slice(0,7)+'-01';$('dash-to').value=now;
+  const update=()=>{const custom=range.value==='custom';$('dash-from-wrap').classList.toggle('hide',!custom);$('dash-to-wrap').classList.toggle('hide',!custom);dashRender();};
+  range.onchange=update;$('dash-from').onchange=dashRender;$('dash-to').onchange=dashRender;$('dash-refresh').onclick=dashRender;
+  if(!window._dashResizeBound){window.addEventListener('resize',()=>{if(!$('t-dashboard').classList.contains('hide'))dashRender();});window._dashResizeBound=true;}
+  update();
 }
 
 /* ========== 账目录入与明细 ========== */
@@ -1613,12 +1703,12 @@ window.confirm = m => {
 /* ===== 页面初始化 ===== */
 function renderBrand() { $('brand').innerHTML = (S.co.logo ? `<img src="${S.co.logo}" style="max-height:40px;max-width:120px;vertical-align:middle;margin-right:8px">` : '📒 ') + esc(S.co.name || 'Micro Bookkeeping'); }
 function renderAll() { renderBrand(); renderKpis(); renderEntries(); renderInvoices(); fillCustSel(); renderCustomers(); renderCustDetail(); renderReport(); renderInventory(); renderSchedule(); renderAR(); renderPL(); renderBS(); renderAccounts(); renderSettings(); }
-const TABS = ['ledger', 'invoices', 'schedule', 'customers', 'inventory', 'ar', 'pl', 'bs', 'accounts', 'settings'];
+const TABS = ['dashboard', 'ledger', 'invoices', 'schedule', 'customers', 'inventory', 'ar', 'pl', 'bs', 'accounts', 'settings'];
 function switchTab(t) { document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === t)); TABS.forEach(k => $('t-' + k).classList.toggle('hide', k !== t)); }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { if (b.dataset.tab === 'customers' && typeof openCust !== 'undefined' && openCust) closeCust(); switchTab(b.dataset.tab); });
 ['pl-from', 'pl-to'].forEach(i => $(i).onchange = renderPL); $('bs-date').onchange = renderBS;
 $('ap-date').value = $('e-date').value = $('i-date').value = $('p-date').value = $('pl-to').value = $('bs-date').value = today();
-$('pl-from').value = today().slice(0, 4) + '-01-01'; $('i-tax').value = S.co.taxRate;
+$('pl-from').value = today().slice(0, 4) + '-01-01'; $('i-tax').value = S.co.taxRate; dashInit(); switchTab('dashboard');
 if (CLOUD_ENABLED) initCloud().catch(e=>{console.error(e); $('cloud-auth-msg').textContent='初始化失败：'+e.message;});
 else { $('cloud-gate').style.display = 'none'; $('cloud-toolbar').style.display = 'none'; migrateTopups(); migrateOR(); loadCompanyForm(); fillAccts(); addRow(); renderAll(); onProfileHash(); }   // 本机模式：直接用 localStorage 里的资料
 </script>
