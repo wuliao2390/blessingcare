@@ -163,14 +163,17 @@ body{padding-left:250px}main{max-width:1340px;padding:10px 30px 34px}
 .tr{font-weight:700}.tr.g{color:#10b981}.tr.b{color:#ef4444}.tr.n{color:var(--mut)}
 .db-kpis.sm{margin-top:16px;padding-top:16px;border-top:1px dashed var(--bd)}.db-kpis.sm .db-tile{padding:14px;display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}
 .db-kpis.sm .db-ic{width:38px;height:38px;font-size:17px;margin:0;grid-row:1/4}.db-kpis.sm .db-tv{font-size:clamp(16px,1.6vw,20px);margin:1px 0 3px}
-.db-row{display:grid;gap:18px}.db-row.r21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.db-row{display:grid;gap:18px}.db-row.r21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}.db-row.r11{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .db-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.db-h h2{font-size:17px}
 .db-chip{background:var(--soft);color:var(--mut);font-size:12px;padding:5px 12px;border-radius:10px}
-.db-card canvas{width:100%;height:270px;display:block}.db-card canvas#dash-donut{height:230px}
+.db-card canvas{width:100%;height:270px;display:block}.db-card canvas#dash-donut,.db-card canvas#dash-donut-rev{height:230px}
 .db-table{width:100%;font-size:13px}.db-table th{background:var(--soft);font-size:11.5px;text-transform:none;color:var(--mut);padding:10px}.db-table td{padding:12px 10px}.db-table tr.clk:hover{background:var(--hov)}
 .db-stats{display:grid;gap:12px;margin-top:10px}.db-stat{background:var(--soft);border-radius:16px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-left:4px solid var(--c,#8b5cf6)}
 .db-stat small{color:var(--mut);display:block;font-size:12.5px}.db-stat b{font-size:26px;line-height:1.2}.db-st-tr{font-size:12px;text-align:right}
-@media(max-width:1100px){.db-row.r21{grid-template-columns:1fr}}
+.db-sel{width:auto;min-width:150px;padding:7px 12px;border-radius:10px;font-size:13px;font-weight:600;background:var(--soft);border:1px solid var(--bd)}
+.exp-btn{width:28px;height:28px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;cursor:pointer;font-size:16px;line-height:1;padding:0}.exp-btn:hover{background:var(--hov)}
+.inv-det td{background:var(--soft);padding:12px 16px;white-space:normal}.inv-det .dd{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:8px}.inv-det .dd small{display:block;color:var(--mut)}.inv-det ul{margin:6px 0 10px;padding-left:18px}
+@media(max-width:1100px){.db-row.r21{grid-template-columns:1fr}}@media(max-width:760px){.db-row.r11{grid-template-columns:1fr}}
 @media(max-width:900px){.db-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.db-card,.dash-panel{padding:15px;border-radius:16px}.db-card canvas{height:230px}.db-stat b{font-size:22px}}
 @media(max-width:420px){.db-kpis{grid-template-columns:1fr}}
 html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:0 4px 24px #0006}
@@ -209,12 +212,13 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
         </div>
       </div>
       <div class="db-card"><div class="db-kpis" id="dash-kpis"></div><div class="db-kpis sm" id="dash-kpis2"></div></div>
-      <div class="db-row r21">
-        <div class="db-card"><div class="db-h"><h2>Revenue &amp; Expenses</h2><span class="db-chip">Monthly</span></div><canvas id="dash-revenue-chart" aria-label="Revenue and expenses chart"></canvas><div class="dash-legend" style="justify-content:center"><span><i class="dash-dot" style="background:#06b6d4"></i>Revenue</span><span><i class="dash-dot" style="background:#ef4444"></i>Expenses</span></div></div>
+      <div class="db-card"><div class="db-h"><h2>Revenue &amp; Expenses</h2><span class="db-chip">Monthly</span></div><canvas id="dash-revenue-chart" aria-label="Revenue and expenses chart"></canvas><div class="dash-legend" style="justify-content:center"><span><i class="dash-dot" style="background:#06b6d4"></i>Revenue</span><span><i class="dash-dot" style="background:#ef4444"></i>Expenses</span></div></div>
+      <div class="db-row r11">
+        <div class="db-card"><div class="db-h"><h2>Revenue Breakdown</h2><span class="db-chip">By revenue account</span></div><canvas id="dash-donut-rev" aria-label="Revenue breakdown chart"></canvas><div class="dash-legend" id="dash-donut-rev-legend" style="justify-content:center"></div></div>
         <div class="db-card"><div class="db-h"><h2>Expense Breakdown</h2><span class="db-chip">By account</span></div><canvas id="dash-donut" aria-label="Expense breakdown chart"></canvas><div class="dash-legend" id="dash-donut-legend" style="justify-content:center"></div></div>
       </div>
       <div class="db-row r21">
-        <div class="db-card"><div class="db-h"><h2>Recent Invoices</h2><span class="db-chip">Latest 6</span></div><div class="tw"><table class="db-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Date</th><th class="r">Amount</th><th class="r">Paid</th><th>Status</th></tr></thead><tbody id="dash-inv-body"></tbody></table></div></div>
+        <div class="db-card"><div class="db-h"><h2>Recent Invoices</h2><select id="dash-inv-filter" class="db-sel" aria-label="Filter invoices"><option value="all">All Invoices</option><option value="open">Unpaid / Partial</option><option value="overdue">Overdue</option><option value="paid">Paid</option></select></div><div class="tw"><table class="db-table"><thead><tr><th style="width:44px"></th><th>Invoice ID</th><th>Customer</th><th>Date</th><th class="r">Amount</th><th class="r">Paid</th><th>Status</th></tr></thead><tbody id="dash-inv-body"></tbody></table></div></div>
         <div class="db-card"><div class="db-h"><h2>Activity Summary</h2><span class="db-chip" id="dash-vs-chip">vs previous period</span></div><div id="dash-activity-kpis" class="db-stats"></div></div>
       </div>
       <div class="dash-grid">
@@ -783,14 +787,24 @@ function dashDrawBars2(canvasId,labels,series){      // 圆角渐变柱 + 浅色
     ctx.fillStyle=mut;ctx.textAlign='center';ctx.fillText(lab,cx,h-9);});
   ctx.textAlign='left';
 }
-function dashDrawDonut(canvasId,items){
+function dashDrawDonut(canvasId,items,label){
   const c=$(canvasId);if(!c)return;const ctx=c.getContext('2d'),w=Math.max(200,c.clientWidth||260),h=parseInt(getComputedStyle(c).height)||230,dpr=window.devicePixelRatio||1;
   c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
   const total=items.reduce((n,i)=>n+i.value,0);if(!total)return;const cx=w/2,cy=h/2,R=Math.min(w,h)/2-6,r=R*.5;let a=-Math.PI/2;
   items.forEach(it=>{const ang=it.value/total*Math.PI*2;ctx.beginPath();ctx.arc(cx,cy,R,a,a+ang);ctx.arc(cx,cy,r,a+ang,a,true);ctx.closePath();ctx.fillStyle=it.color;ctx.fill();ctx.strokeStyle=dashCss('--card')||'#fff';ctx.lineWidth=2.5;ctx.stroke();
     const pc=it.value/total*100;if(pc>=6){const mid=a+ang/2,rr=(R+r)/2;ctx.fillStyle='#fff';ctx.font='600 12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(pc)+'%',cx+Math.cos(mid)*rr,cy+Math.sin(mid)*rr);}a+=ang;});
-  ctx.textBaseline='alphabetic';ctx.textAlign='center';ctx.fillStyle=dashCss('--mut');ctx.font='11px system-ui';ctx.fillText('Total expenses',cx,cy-4);ctx.fillStyle=dashCss('--tx');ctx.font='700 14px system-ui';ctx.fillText(fmt(total),cx,cy+15);ctx.textAlign='left';
+  ctx.textBaseline='alphabetic';ctx.textAlign='center';ctx.fillStyle=dashCss('--mut');ctx.font='11px system-ui';ctx.fillText(label||'Total expenses',cx,cy-4);ctx.fillStyle=dashCss('--tx');ctx.font='700 14px system-ui';ctx.fillText(fmt(total),cx,cy+15);ctx.textAlign='left';
 }
+const dashInvOpen=new Set();
+function dashInvTable(){
+  const f=$('dash-inv-filter')?$('dash-inv-filter').value:'all',L=S.invoices.filter(v=>!v.void).map(v=>({v,q:invStat(v)})).filter(x=>f==='all'||(f==='open'&&(x.q.label==='Unpaid'||x.q.label==='Partial'))||(f==='overdue'&&x.q.label==='Overdue')||(f==='paid'&&x.q.label==='Paid'))
+    .sort((x,y)=>(y.v.date||'').localeCompare(x.v.date||'')||String(y.v.no).localeCompare(String(x.v.no))).slice(0,8);
+  $('dash-inv-body').innerHTML=L.length?L.map(({v,q})=>{const open=dashInvOpen.has(v.id);
+    const det=open?`<tr class="inv-det"><td colspan="7"><div class="dd"><div><small>Due date</small>${v.due||'-'}</div><div><small>Subtotal</small>${fmt(v.sub)}</div><div><small>Tax</small>${fmt(v.tax||0)}</div><div><small>Paid</small>${fmt(q.paid)}</div><div><small>Outstanding</small><b${q.out>0?' class="neg"':''}>${fmt(q.out)}</b></div></div>
+      <ul>${(v.items||[]).map(it=>`<li>${dashEsc(it.item||it.desc||'Item')} × ${it.qty||1} — ${fmt(lineTotal(it))}</li>`).join('')||'<li>No line items</li>'}</ul><button class="sm" onclick="showInvoice('${v.id}')">View invoice</button></td></tr>`:'';
+    return `<tr><td><button class="exp-btn" onclick="dashInvToggle('${v.id}')" aria-label="Details">${open?'−':'+'}</button></td><td><b>#${dashEsc(v.no)}</b></td><td>${dashEsc(v.cust)}</td><td>${v.date}</td><td class="r">${fmt(v.total)}</td><td class="r">${fmt(q.paid)}</td><td><span class="badge ${bcls(q.label)}">${q.label}</span></td></tr>`+det;}).join(''):'<tr><td colspan="7" class="dash-empty">No invoices match this filter.</td></tr>';
+}
+window.dashInvToggle=id=>{dashInvOpen.has(id)?dashInvOpen.delete(id):dashInvOpen.add(id);dashInvTable();};
 function dashRender(){
   const {from,to,mode}=dashPeriod(),p=plData(from,to),cashBal=net(SYS.cash,'',to)+net(SYS.bank,'',to),arInv=S.invoices.filter(v=>!v.void&&v.date<=to).map(v=>({v,s:invStat(v)})).filter(x=>x.s.out>0),arTotal=r2(arInv.reduce((n,x)=>n+x.s.out,0));
   $('dash-period-label').textContent=(from===to?from:from+' → '+to)+' · '+(S.co.name||'Business')+' · MYR';
@@ -823,14 +837,16 @@ function dashRender(){
   const expL=[...p.exp].filter(x=>x[1]>0).sort((x,y)=>y[1]-x[1]),pal=['#ef4444','#f59e0b','#8b5cf6','#3b82f6','#10b981','#94a3b8'],items=expL.slice(0,5).map((x,i)=>({label:x[0],value:x[1],color:pal[i]})),rest=r2(expL.slice(5).reduce((n,x)=>n+x[1],0));if(rest>0)items.push({label:'Others',value:rest,color:pal[5]});
   $('dash-donut').style.display=items.length?'block':'none';dashDrawDonut('dash-donut',items);
   $('dash-donut-legend').innerHTML=items.length?items.map(i=>`<span><i class="dash-dot" style="background:${i.color};border-radius:3px"></i>${dashEsc(i.label)}</span>`).join(''):'<div class="dash-empty">No expenses recorded in this period.</div>';
-  const rows=S.invoices.filter(v=>!v.void).sort((x,y)=>(y.date||'').localeCompare(x.date||'')||String(y.no).localeCompare(String(x.no))).slice(0,6);
-  $('dash-inv-body').innerHTML=rows.length?rows.map(v=>{const q=invStat(v);return `<tr class="clk" onclick="showInvoice('${v.id}')"><td><b>${dashEsc(v.no)}</b></td><td>${dashEsc(v.cust)}</td><td>${v.date}</td><td class="r">${fmt(v.total)}</td><td class="r">${fmt(q.paid)}</td><td><span class="badge ${bcls(q.label)}">${q.label}</span></td></tr>`;}).join(''):'<tr><td colspan="6" class="dash-empty">No invoices yet.</td></tr>';
+  const revL=[...p.inc].filter(x=>x[1]>0).sort((x,y)=>y[1]-x[1]),palR=['#06b6d4','#3b82f6','#8b5cf6','#10b981','#f59e0b','#94a3b8'],itemsR=revL.slice(0,5).map((x,i)=>({label:x[0],value:x[1],color:palR[i]})),restR=r2(revL.slice(5).reduce((n,x)=>n+x[1],0));if(restR>0)itemsR.push({label:'Others',value:restR,color:palR[5]});
+  $('dash-donut-rev').style.display=itemsR.length?'block':'none';dashDrawDonut('dash-donut-rev',itemsR,'Total revenue');
+  $('dash-donut-rev-legend').innerHTML=itemsR.length?itemsR.map(i=>`<span><i class="dash-dot" style="background:${i.color};border-radius:3px"></i>${dashEsc(i.label)}</span>`).join(''):'<div class="dash-empty">No revenue recorded in this period.</div>';
+  dashInvTable();
 }
 function renderKpis(){dashRender();}
 function dashInit(){
   const range=$('dash-range');if(!range)return;const now=today();$('dash-from').value=now.slice(0,7)+'-01';$('dash-to').value=now;
   const update=()=>{const custom=range.value==='custom';$('dash-from-wrap').classList.toggle('hide',!custom);$('dash-to-wrap').classList.toggle('hide',!custom);dashRender();};
-  range.onchange=update;$('dash-from').onchange=dashRender;$('dash-to').onchange=dashRender;$('dash-refresh').onclick=dashRender;
+  range.onchange=update;if($('dash-inv-filter'))$('dash-inv-filter').onchange=dashInvTable;$('dash-from').onchange=dashRender;$('dash-to').onchange=dashRender;$('dash-refresh').onclick=dashRender;
   if(!window._dashResizeBound){window.addEventListener('resize',()=>{if(!$('t-dashboard').classList.contains('hide'))dashRender();});window._dashResizeBound=true;}
   update();
 }
