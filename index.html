@@ -73,6 +73,7 @@ body.pr-inv>#print-area.classic{display:flex!important;flex-direction:column;min
 .tl-body{display:grid}.tl-axis{position:relative}.tl-h{box-sizing:border-box;border-bottom:1px solid var(--bd);font-size:11px;color:var(--mut);text-align:right;padding-right:6px}.tl-h span{position:relative;top:-8px}
 .tl-col{position:relative;border-left:1px solid var(--bd);cursor:cell;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 47px,var(--grid) 47px,var(--grid) 48px)}
 .tl-ev{position:absolute;border:1px solid rgba(0,0,0,.14);border-radius:6px;padding:2px 5px;font-size:12px;line-height:1.3;overflow:hidden;cursor:pointer;box-sizing:border-box;z-index:2}.tl-ev{color:#1f2937}.tl-ev small{color:#4b5563}
+.tl-blk{position:absolute;left:0;right:0;z-index:1;pointer-events:none;overflow:hidden;box-sizing:border-box;padding:2px 5px;font-size:11px;font-weight:600;color:var(--mut);border-top:1px solid rgba(100,116,139,.35);border-bottom:1px solid rgba(100,116,139,.35);background:repeating-linear-gradient(45deg,rgba(148,163,184,.30) 0 8px,rgba(148,163,184,.12) 8px 16px)}
 .tl-now{position:absolute;left:0;right:0;height:0;border-top:2px solid #ef4444;z-index:3;pointer-events:none}
 .sc-week{display:flex;gap:6px;margin:10px 0;overflow-x:auto}.sc-week button{flex:1 0 74px;padding:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;cursor:pointer;font:inherit}.sc-week button.on{border-color:var(--pri);background:var(--sel)}.sc-week button.td{font-weight:700}
 .b-asset{background:#dbeafe;color:#1e40af}.b-liab{background:#ffedd5;color:#9a3412}.b-eq{background:#ede9fe;color:#5b21b6}
@@ -359,6 +360,15 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
         <span class="vsw"><button class="sm" id="sc-vday">Day</button><button class="sm" id="sc-vweek">Week</button></span></div></div>
       <div id="sc-lunar" class="sc-lunar"></div><div id="sc-week" class="sc-week"></div><div id="sc-grid"></div>
       <small style="color:#6b7280;display:block;margin-top:6px">Tap an empty slot to start a booking at that time; tap an appointment block to edit it. The red line is the current time.</small></div>
+    <div class="card"><div class="row"><h2 id="bk-title">Blocked Days / Periods</h2></div>
+      <small style="color:#6b7280;display:block;margin:-4px 0 8px">Block a whole day, several days, or a time range (e.g. holiday, leave, training). Blocked times are shaded on the schedule and cannot be booked.</small>
+      <div class="grid">
+        <div><label>From date</label><input type="date" id="bk-from"></div><div><label>To date (blank = same day)</label><input type="date" id="bk-to"></div>
+        <div><label>Block</label><select id="bk-mode"><option value="day">Whole day(s)</option><option value="time">Time range each day</option></select></div>
+        <div class="bk-t hide"><label>Start</label><input type="time" id="bk-start" value="12:00"></div><div class="bk-t hide"><label>End</label><input type="time" id="bk-end" value="14:00"></div>
+        <div style="grid-column:span 2"><label>Reason (optional)</label><input id="bk-reason" placeholder="e.g. Public holiday, Staff leave"></div>
+        <div><button class="btn" id="bk-add">Block</button> <button class="sm hide" id="bk-cancel" style="padding:9px 14px">Cancel edit</button></div></div>
+      <div class="tw" style="margin-top:10px"><table><thead><tr><th>Dates</th><th>Time</th><th>Reason</th><th>Existing appointments</th><th></th></tr></thead><tbody id="bk-body"></tbody></table></div></div>
     <div class="card"><div class="row"><h2>WhatsApp Reminders</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="rm-range" style="width:auto"><option value="today">Today</option><option value="tomorrow" selected>Tomorrow</option><option value="week">Next 7 days</option></select><button class="btn" id="rm-all" style="background:#16a34a">Send all unsent</button></div></div>
       <div class="tw"><table><thead><tr><th>When</th><th>Customer</th><th>Service</th><th>Phone</th><th>Reminder</th><th></th></tr></thead><tbody id="rm-body"></tbody></table></div></div>
     <div class="card"><h2 style="margin-bottom:10px">Appointments — <span id="sc-daytxt"></span></h2><div class="tw"><table><thead><tr><th>Time</th><th>Customer</th><th>Service</th><th>Staff</th><th>Status</th><th>A/R · Billing</th><th></th></tr></thead><tbody id="sc-body"></tbody></table></div></div>
@@ -497,7 +507,7 @@ const OBE = 'Opening Balance Equity';
 const fresh = () => ({
   co: { name: '', regNo: '', taxId: '', address: '', phone: '', email: '', website: '', bank: '', notes: 'Thank you for your business.', taxName: 'SST', taxRate: 0, logo: '', qrs: [], cc: '60', fax: '', tin: '', msic: '', taxCode: 'SV', payee: '', layout: 'classic', remindTpl: 'Hi {name}, this is a friendly reminder of your appointment:\n{service} {staff}\n{weekday}, {date} at {time}\nPlease reply to confirm, or let us know if you need to reschedule.\n— {company}', footer2: 'THIS IS A COMPUTER GENERATED INVOICE NO SIGNATURE IS REQUIRED.' },
   accts: { income: ['Sales Revenue', 'Service Income', 'Other Income'], expense: ['General Expense', 'Utility', 'Rent', 'Salaries', 'Supplies', 'Marketing', 'Other Expense'] },
-  entries: [], journal: [], invoices: [], payments: [], customers: [], products: [], packages: [], visits: [], stockAdj: [], appts: [], topups: [], nextInv: 1 });
+  entries: [], journal: [], invoices: [], payments: [], customers: [], products: [], packages: [], visits: [], stockAdj: [], appts: [], topups: [], blocks: [], nextInv: 1 });
 let S;
 try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY))); } catch (e) { S = fresh(); }
 // 本机缓存立即写入；云端写入由防抖队列处理，避免每个字段输入都触发请求
@@ -1987,6 +1997,7 @@ $('ap-save').onclick = () => {
   if (!o.custId || !o.date || !o.time) return alert('Customer, date and time are required.');
   if (!o.service) { const k = S.packages.find(x => x.id === o.pkgId); o.service = k ? k.name : ''; }
   if (!o.service) return alert('Choose or type a service.');
+  { const hit = blkHit(o.date, toMin(o.time), toMin(o.time) + o.dur); if (hit) return alert('This time is blocked' + (hit.reason ? ' (' + hit.reason + ')' : '') + ': ' + dmy(hit.from) + (hit.to && hit.to !== hit.from ? ' – ' + dmy(hit.to) : '') + (hit.allDay ? ', whole day' : ', ' + hit.start + '–' + hit.end) + '. Choose another time, or remove the block under Schedule › Blocked Days / Periods.'); }
   const s0 = toMin(o.time), e0 = s0 + o.dur;          // 冲突检查：同一员工、同一天、时间段重叠
   const clash = o.staff && S.appts.find(a => a.id !== editingAppt && a.date === o.date && !['Cancelled', 'No-show'].includes(a.status) && (a.staff || '').toLowerCase() === o.staff.toLowerCase() && toMin(a.time) < e0 && s0 < toMin(a.time) + a.dur);
   if (clash && !confirm(`${o.staff} already has an appointment at ${clash.time} (${apCust(clash.custId).name}). Book anyway?`)) return;
@@ -2088,16 +2099,48 @@ function tlLayout(list) {                             // 重叠的预约并排�
   items.forEach(it => { if (it.s >= cEnd) { flush(); cEnd = it.e; } else cEnd = Math.max(cEnd, it.e); cl.push(it); }); flush(); return res;
 }
 window.apSlot = (date, time) => { resetApForm(); $('ap-date').value = date; $('ap-time').value = time; $('ap-title').textContent = 'New Appointment — ' + wday(date) + ' ' + dmy(date) + ' ' + time; $('ap-title').scrollIntoView({ behavior: 'smooth' }); };
+/* ===== 封锁日期 / 时段：整天（可跨多天）或每天固定时间段；时间轴上画斜纹，预约时不可订 ===== */
+const blkCovers = (b, d) => b.from <= d && d <= (b.to || b.from);
+const blkDay = d => S.blocks.filter(b => blkCovers(b, d));
+const blkHit = (d, s0, e0) => blkDay(d).find(b => b.allDay || (toMin(b.start) < e0 && s0 < toMin(b.end)));
+function blkCol(d) {
+  return blkDay(d).map(b => { const s = b.allDay ? T0 * 60 : Math.max(toMin(b.start), T0 * 60), e = b.allDay ? T1 * 60 : Math.min(toMin(b.end), T1 * 60); if (e <= s) return '';
+    return `<div class="tl-blk" style="top:${(s - T0 * 60) / 60 * HP}px;height:${(e - s) / 60 * HP}px">🚫 ${esc(b.reason || 'Blocked')}${b.allDay ? '' : ' · ' + b.start + '–' + b.end}</div>`; }).join('');
+}
+function blkAffected(b) { return S.appts.filter(a => !['Cancelled', 'No-show'].includes(a.status) && blkCovers(b, a.date) && (b.allDay || (toMin(b.start) < toMin(a.time) + (a.dur || 60) && toMin(a.time) < toMin(b.end)))).length; }
+$('bk-mode').onchange = () => document.querySelectorAll('.bk-t').forEach(e => e.classList.toggle('hide', $('bk-mode').value !== 'time'));
+let editingBlk = null;
+function blkReset() { editingBlk = null; $('bk-reason').value = ''; $('bk-to').value = ''; $('bk-mode').value = 'day'; $('bk-mode').onchange(); $('bk-add').textContent = 'Block'; $('bk-cancel').classList.add('hide'); $('bk-title').textContent = 'Blocked Days / Periods'; }
+$('bk-cancel').onclick = blkReset;
+window.blkEdit = id => { const b = S.blocks.find(x => x.id === id); if (!b) return; editingBlk = id;
+  $('bk-from').value = b.from; $('bk-to').value = b.to && b.to !== b.from ? b.to : ''; $('bk-mode').value = b.allDay ? 'day' : 'time'; $('bk-mode').onchange();
+  if (!b.allDay) { $('bk-start').value = b.start; $('bk-end').value = b.end; } $('bk-reason').value = b.reason || '';
+  $('bk-add').textContent = 'Save Changes'; $('bk-cancel').classList.remove('hide'); $('bk-title').textContent = 'Edit Block'; $('bk-title').scrollIntoView({ behavior: 'smooth' }); };
+$('bk-add').onclick = () => {
+  const from = $('bk-from').value, to = $('bk-to').value || from, allDay = $('bk-mode').value === 'day', start = $('bk-start').value, end = $('bk-end').value;
+  if (!from) return alert('Please choose the date to block.');
+  if (to < from) return alert('"To date" cannot be earlier than "From date".');
+  if (!allDay && (!start || !end || toMin(end) <= toMin(start))) return alert('Please enter a start time earlier than the end time.');
+  const o = { from, to, allDay, start: allDay ? '' : start, end: allDay ? '' : end, reason: $('bk-reason').value.trim() }, ex = editingBlk && S.blocks.find(x => x.id === editingBlk);
+  if (ex) Object.assign(ex, o); else S.blocks.push({ id: uid(), ...o });
+  blkReset(); scDate = from; save(); renderAll();
+};
+window.blkDel = id => { if (!confirm('Remove this block?')) return; S.blocks = S.blocks.filter(b => b.id !== id); save(); renderAll(); };
+function renderBlocks() {
+  if (!$('bk-from').value) $('bk-from').value = scDate;
+  $('bk-body').innerHTML = S.blocks.slice().sort((a, b) => a.from.localeCompare(b.from) || (a.start || '').localeCompare(b.start || '')).map(b => { const n = blkAffected(b), past = (b.to || b.from) < today();
+    return `<tr${past ? ' style="opacity:.55"' : ''}><td>${dmy(b.from)}${b.to && b.to !== b.from ? ' – ' + dmy(b.to) : ''}</td><td>${b.allDay ? 'Whole day' : b.start + ' – ' + b.end}</td><td>${esc(b.reason || '-')}</td><td>${n ? `<span class="neg">${n} booked – please reschedule</span>` : '-'}</td><td><button class="sm" onclick="scGo('${b.from}')">View</button><button class="sm" onclick="blkEdit('${b.id}')">Edit</button><button class="sm del" onclick="blkDel('${b.id}')">Remove</button></td></tr>`; }).join('') || empty(5);
+}
 function renderTimeline() {
   const dow = new Date(scDate + 'T00:00').getDay(), mon = addDays(scDate, -((dow + 6) % 7)), days = scView === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(mon, i)) : [scDate];
   const n = days.length, minCol = n > 1 ? 120 : 200, tpl = `52px repeat(${n}, minmax(${minCol}px, 1fr))`, minW = 52 + n * minCol, now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
   const hours = Array.from({ length: T1 - T0 }, (_, i) => `<div class="tl-h" style="height:${HP}px"><span>${String(T0 + i).padStart(2, '0')}:00</span></div>`).join('');
-  const heads = days.map(d => { const L = lunar(d); return `<div class="tl-dh ${d === today() ? 'td' : ''}"><b>${wday(d)} ${d.slice(8)}/${d.slice(5, 7)}</b>${L ? `<br><small class="${L.fest ? 'fest' : ''}">${L.fest ? L.fest + ' · ' : ''}${L.full}</small>` : ''}</div>`; }).join('');
+  const heads = days.map(d => { const L = lunar(d); return `<div class="tl-dh ${d === today() ? 'td' : ''}"><b>${wday(d)} ${d.slice(8)}/${d.slice(5, 7)}</b>${blkDay(d).some(b => b.allDay) ? '<br><small style="color:#dc2626">🚫 Blocked</small>' : blkDay(d).length ? '<br><small style="color:#dc2626">🚫 Partly blocked</small>' : ''}${L ? `<br><small class="${L.fest ? 'fest' : ''}">${L.fest ? L.fest + ' · ' : ''}${L.full}</small>` : ''}</div>`; }).join('');
   const cols = days.map(d => {
     const list = S.appts.filter(a => a.date === d && a.status !== 'Cancelled').sort((a, b) => a.time.localeCompare(b.time));
     const blocks = tlLayout(list).filter(it => it.e > T0 * 60 && it.s < T1 * 60).map(it => { const a = it.a, c = apCust(a.custId), vs = Math.max(it.s, T0 * 60), ve = Math.min(it.e, T1 * 60), hgt = Math.max((ve - vs) / 60 * HP, 22);
       return `<div class="tl-ev" style="top:${(vs - T0 * 60) / 60 * HP}px;height:${hgt}px;left:calc(${it.lane / it.n * 100}% + 1px);width:calc(${100 / it.n}% - 2px);background:${stCol[a.status]}" onclick="event.stopPropagation();apEdit('${a.id}')" title="${esc(c.name)} · ${esc(a.service)} · ${a.status}"><b>${a.time}</b> ${esc(c.name)}${a.remindedAt ? ' 📱' : ''}<br><small>${esc(a.service)}${a.staff ? ' · ' + esc(a.staff) : ''}</small></div>`; }).join('');
-    return `<div class="tl-col" data-date="${d}">${d === today() && nowMin >= T0 * 60 && nowMin < T1 * 60 ? `<div class="tl-now" style="top:${(nowMin - T0 * 60) / 60 * HP}px"></div>` : ''}${blocks}</div>`; }).join('');
+    return `<div class="tl-col" data-date="${d}">${d === today() && nowMin >= T0 * 60 && nowMin < T1 * 60 ? `<div class="tl-now" style="top:${(nowMin - T0 * 60) / 60 * HP}px"></div>` : ''}${blocks}${blkCol(d)}</div>`; }).join('');
   $('sc-grid').innerHTML = `<div class="tl" id="tl"><div class="tl-head" style="grid-template-columns:${tpl};min-width:${minW}px"><div></div>${heads}</div><div class="tl-body" style="grid-template-columns:${tpl};min-width:${minW}px;height:${(T1 - T0) * HP}px"><div class="tl-axis">${hours}</div>${cols}</div></div>`;
   const box = $('tl'); box.onscroll = () => { tlScroll = box.scrollTop; };
   box.querySelectorAll('.tl-col').forEach(col => col.onclick = e => {   // 点空白处：按点击位置取整到 30 分钟，预填新预约
@@ -2123,8 +2166,8 @@ function renderSchedule() {
   $('sc-lunar').innerHTML = `<b>${new Date(scDate + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</b>${L0 ? ` &nbsp;·&nbsp; 农历 ${L0.year}年${L0.full}${L0.fest ? ` <span class="fest">【${L0.fest}】</span>` : ''}` : ''}`;
   const dow = new Date(scDate + 'T00:00').getDay(), mon = addDays(scDate, -((dow + 6) % 7));
   $('sc-week').innerHTML = Array.from({ length: 7 }, (_, i) => addDays(mon, i)).map(d => { const n = S.appts.filter(a => a.date === d && a.status !== 'Cancelled').length, L = lunar(d);
-    return `<button class="${d === scDate ? 'on' : ''} ${d === today() ? 'td' : ''}" onclick="scGo('${d}')">${wday(d)} ${d.slice(8)}${L ? `<br><small class="${L.fest ? 'fest' : ''}">${L.short}</small>` : ''}<br><small>${n} appt${n === 1 ? '' : 's'}</small></button>`; }).join('');
-  renderTimeline(); renderReminders();
+    return `<button class="${d === scDate ? 'on' : ''} ${d === today() ? 'td' : ''}" onclick="scGo('${d}')">${wday(d)} ${d.slice(8)}${L ? `<br><small class="${L.fest ? 'fest' : ''}">${L.short}</small>` : ''}<br><small>${n} appt${n === 1 ? '' : 's'}</small>${blkDay(d).length ? '<br><small style="color:#dc2626">🚫 ' + (blkDay(d).some(b => b.allDay) ? 'Blocked' : 'Partly') + '</small>' : ''}</button>`; }).join('');
+  renderTimeline(); renderBlocks(); renderReminders();
   $('sc-daytxt').textContent = wday(scDate) + ' ' + dmy(scDate);
   const L = S.appts.filter(a => a.date === scDate).sort((a, b) => a.time.localeCompare(b.time));
   $('sc-body').innerHTML = L.map(a => { const c = apCust(a.custId), k = c.id ? custStat(c) : { out: 0, od: 0 }, v = a.invId && S.invoices.find(i => i.id === a.invId);
@@ -2163,7 +2206,7 @@ window.confirm = m => {
   dlgAsk(msg, () => { cfPass = true; try { r && r(); } finally { cfPass = false; } }, lbl, !soft);
   return false;
 };
-['delEntry', 'delPayment', 'delInvoice', 'delCust', 'delProd', 'delVisit', 'voidTopup', 'delTopup', 'apDel', 'coaDelAcct', 'coaDelCat'].forEach(n => { const f = window[n]; window[n] = (...a) => { cfRetry = () => f(...a); return f(...a); }; });
+['delEntry', 'delPayment', 'delInvoice', 'delCust', 'delProd', 'delVisit', 'voidTopup', 'delTopup', 'apDel', 'blkDel', 'coaDelAcct', 'coaDelCat'].forEach(n => { const f = window[n]; window[n] = (...a) => { cfRetry = () => f(...a); return f(...a); }; });
 { const f = $('ap-save').onclick; $('ap-save').onclick = () => { cfRetry = () => f(); return f(); }; }
 
 /* ===== 页面初始化 ===== */
