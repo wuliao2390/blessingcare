@@ -355,6 +355,10 @@ html[data-theme="dark"] .tl-ev{border-color:rgba(255,255,255,.18)}html[data-them
       <div style="text-align:right"><button class="btn" id="c-save">Save Company Details</button></div></div>
     <div class="card"><h2 style="margin-bottom:10px">Chart of Accounts</h2><p style="color:var(--mut);margin:0 0 10px">Accounts, codes and categories are now managed in the <b>Account Maintenance</b> tab.</p><button class="btn" type="button" onclick="switchTab('coa')">Open Account Maintenance</button></div>
     <div class="card"><h2 style="margin-bottom:10px">Backup</h2><button class="btn" id="bk-exp">Export backup (.json)</button> &nbsp; <label style="display:inline">Restore: <input type="file" id="bk-imp" accept=".json" style="width:auto"></label></div>
+    <div class="card"><h2 style="margin-bottom:6px">Photo storage (my computer)</h2><p style="color:var(--mut);margin:0 0 10px">Customer service photos are saved on your own computer through the photo server, instead of inside the browser. The address and password below are kept on <b>this device only</b> – enter them once on each phone / computer. The device needs Tailscale turned on to reach the server.</p>
+      <div class="grid"><div><label>Photo server address</label><input id="ph-url" placeholder="https://my-pc.tailxxxx.ts.net" autocapitalize="off" autocomplete="off"></div><div><label>Password (shown in the photo server window)</label><input id="ph-key" type="password" autocomplete="off"></div></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="ph-save">Save</button><button class="sm" id="ph-test" style="padding:9px 14px">Test connection</button><button class="sm" id="ph-mig" style="padding:9px 14px">Move existing photos to my computer</button><button class="sm del" id="ph-off" style="padding:9px 14px">Turn off</button></div>
+      <div id="ph-msg" style="margin-top:8px"></div></div>
   </section>
 </main>
 
@@ -391,7 +395,7 @@ html[data-theme="dark"] .tl-ev{border-color:rgba(255,255,255,.18)}html[data-them
 
 <script>
 /* ☁️ 云端同步总开关：false = 暂时停用 Supabase（纯本机模式，不加载 SDK、不显示登录页）；改回 true 即可重新启用 */
-const CLOUD_ENABLED = true;
+const CLOUD_ENABLED = false;
 if (CLOUD_ENABLED) document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
 </script>
 <script>
@@ -1133,22 +1137,56 @@ window.addVisit = () => {
   save(); renderAll();
 };
 /* ===== 每次护理的情况与照片：照片压缩成 JPEG 存入记录（visit.photos），随备份一起导出 ===== */
+/* ===== 照片保存到自己的电脑（照片服务器）：记录里只存 "srv:文件名"，旧的 data: 照片照常显示 ===== */
+var PH_KEY = 'bk_photo_srv_v1', PH_NONE = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" fill="#e5e7eb"/><text x="48" y="46" font-size="11" text-anchor="middle" fill="#6b7280" font-family="sans-serif">Photo not</text><text x="48" y="60" font-size="11" text-anchor="middle" fill="#6b7280" font-family="sans-serif">available</text></svg>');
+function phCfg() { try { const c = JSON.parse(localStorage.getItem(PH_KEY) || 'null'); return c && c.url && c.key ? c : null; } catch (e) { return null; } }
+function phSrc(s) { if (!s || s.indexOf('srv:') !== 0) return s; const c = phCfg(); return c ? c.url + '/p/' + encodeURIComponent(s.slice(4)) + '?k=' + encodeURIComponent(c.key) : PH_NONE; }
+window.phErr = im => { im.onerror = null; im.src = PH_NONE; im.title = 'Photo unavailable – is Tailscale on and the photo server running?'; };
+async function phUpload(dataUrl) {                     // 成功返回 "srv:文件名"；没设置或失败就原样返回（继续存在浏览器里）
+  const c = phCfg(); if (!c) return dataUrl;
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    const r = await fetch(c.url + '/upload?k=' + encodeURIComponent(c.key), { method: 'POST', headers: { 'Content-Type': blob.type || 'image/jpeg' }, body: blob });
+    if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(); if (!j.name) throw new Error('no name'); return 'srv:' + j.name;
+  } catch (e) { return dataUrl; }
+}
+function phMsg(t, ok) { $('ph-msg').innerHTML = `<small style="color:${ok ? '#16a34a' : '#dc2626'}">${esc(t)}</small>`; }
+$('ph-save').onclick = () => {
+  let u = $('ph-url').value.trim().replace(/\/+$/, ''), k = $('ph-key').value.trim();
+  if (!/^https:\/\//i.test(u)) return phMsg('The address must start with https://', false);
+  if (!k) return phMsg('Enter the password.', false);
+  localStorage.setItem(PH_KEY, JSON.stringify({ url: u, key: k })); phMsg('Saved on this device. Press “Test connection”.', true); renderAll();
+};
+$('ph-test').onclick = async () => {
+  const c = phCfg(); if (!c) return phMsg('Save the address and password first.', false); phMsg('Testing…', true);
+  try { const r = await fetch(c.url + '/ping?k=' + encodeURIComponent(c.key)); if (r.status === 401) return phMsg('Connected, but the password is wrong.', false); const j = await r.json(); phMsg('Connected ✓  (' + j.count + ' photos on your computer)', true); }
+  catch (e) { phMsg('Cannot reach the server. Check that Tailscale is on, the server window is running, and the address is correct.', false); }
+};
+$('ph-off').onclick = () => { localStorage.removeItem(PH_KEY); $('ph-url').value = ''; $('ph-key').value = ''; phMsg('Turned off on this device. New photos will be saved in the browser again.', true); renderAll(); };
+$('ph-mig').onclick = async () => {
+  const c = phCfg(); if (!c) return phMsg('Save the address and password first.', false);
+  let n = 0, f = 0; phMsg('Moving photos…', true);
+  for (const v of S.visits) for (let i = 0; i < (v.photos || []).length; i++) { const p = v.photos[i]; if (p.indexOf('data:') === 0) { const r = await phUpload(p); if (r.indexOf('srv:') === 0) { v.photos[i] = r; n++; } else f++; } }
+  if (n) { save(); renderAll(); } phMsg(n + ' photo(s) moved to your computer' + (f ? ', ' + f + ' failed (try again)' : '') + '.', !f);
+};
+(function () { const c = phCfg(); if (c) { $('ph-url').value = c.url; $('ph-key').value = c.key; } })();
+
 function readPhotos(files, cb) {
   Promise.all([...files].filter(f => /^image\//.test(f.type)).map(f => new Promise(res => {
     const rd = new FileReader(); rd.onerror = () => res(null);
     rd.onload = () => { const img = new Image(); img.onerror = () => res(null); img.onload = () => {
       const k = Math.min(1, 720 / Math.max(img.width, img.height)), cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
       const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height); res(cv.toDataURL('image/jpeg', 0.7)); }; img.src = rd.result; };
-    rd.readAsDataURL(f); }))).then(a => cb(a.filter(Boolean)));
+    rd.readAsDataURL(f); }))).then(async a => { const out = []; let bad = 0; for (const d of a.filter(Boolean)) { const r = await phUpload(d); if (phCfg() && r.indexOf('data:') === 0) bad++; out.push(r); } if (bad) alert('Could not reach your photo server — ' + bad + ' photo(s) were kept in the browser for now. Use “Move existing photos to my computer” in Settings later.'); cb(out); });
 }
-const phHtml = (L, k) => L.map((s, i) => `<div class="ph"><img src="${s}" onclick="phOpen('${k}','',${i})"><button type="button" class="x" onclick="phDel('${k}',${i})">×</button></div>`).join('');
+const phHtml = (L, k) => L.map((s, i) => `<div class="ph"><img src="${phSrc(s)}" onerror="phErr(this)" onclick="phOpen('${k}','',${i})"><button type="button" class="x" onclick="phDel('${k}',${i})">×</button></div>`).join('');
 const phThumbs = v => { const L = v.photos || []; if (!L.length) return '<small style="color:#6b7280">-</small>';
-  return '<div class="ph-grid">' + L.slice(0, 3).map((s, i) => `<div class="ph ph-s"><img src="${s}" onclick="phOpen('v','${v.id}',${i})"></div>`).join('') + (L.length > 3 ? `<button class="sm" onclick="phOpen('v','${v.id}',3)">+${L.length - 3}</button>` : '') + '</div>'; };
+  return '<div class="ph-grid">' + L.slice(0, 3).map((s, i) => `<div class="ph ph-s"><img src="${phSrc(s)}" onerror="phErr(this)" onclick="phOpen('v','${v.id}',${i})"></div>`).join('') + (L.length > 3 ? `<button class="sm" onclick="phOpen('v','${v.id}',3)">+${L.length - 3}</button>` : '') + '</div>'; };
 const phList = (k, id) => k === 'p' ? svcPh : k === 'e' ? veSt.photos : ((S.visits.find(v => v.id === id) || {}).photos || []);
 let phSt = { k: '', id: '', i: 0 };
 function phDraw() {
   const L = phList(phSt.k, phSt.id); if (!L.length) { $('ph-view').classList.add('hide'); return; }
-  phSt.i = (phSt.i + L.length) % L.length; $('ph-big').src = L[phSt.i];
+  phSt.i = (phSt.i + L.length) % L.length; $('ph-big').src = phSrc(L[phSt.i]);
   const v = phSt.k === 'v' && S.visits.find(x => x.id === phSt.id); $('ph-cap').textContent = (v ? dmy(v.date) + ' · ' + v.service + '  ' : '') + (phSt.i + 1) + ' / ' + L.length;
 }
 window.phOpen = (k, id, i) => { phSt = { k, id, i }; phDraw(); $('ph-view').classList.remove('hide'); };
