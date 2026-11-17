@@ -212,14 +212,14 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
         </div>
       </div>
       <div class="db-card"><div class="db-kpis" id="dash-kpis"></div><div class="db-kpis sm" id="dash-kpis2"></div></div>
-      <div class="db-card"><div class="db-h"><h2>Revenue &amp; Expenses</h2><span class="db-chip">Monthly</span></div><canvas id="dash-revenue-chart" aria-label="Revenue and expenses chart"></canvas><div class="dash-legend" style="justify-content:center"><span><i class="dash-dot" style="background:#06b6d4"></i>Revenue</span><span><i class="dash-dot" style="background:#ef4444"></i>Expenses</span></div></div>
+      <div class="db-card"><div class="db-h"><h2>Revenue &amp; Expenses</h2><select id="dash-grp" class="db-sel" aria-label="Chart grouping"><option value="month">Monthly</option><option value="quarter">Quarterly</option><option value="half">Half Yearly</option><option value="year">Yearly</option></select></div><canvas id="dash-revenue-chart" aria-label="Revenue and expenses chart"></canvas><div class="dash-legend" style="justify-content:center"><span><i class="dash-dot" style="background:#06b6d4"></i>Revenue</span><span><i class="dash-dot" style="background:#ef4444"></i>Expenses</span></div></div>
       <div class="db-row r11">
         <div class="db-card"><div class="db-h"><h2>Revenue Breakdown</h2><span class="db-chip">By revenue account</span></div><canvas id="dash-donut-rev" aria-label="Revenue breakdown chart"></canvas><div class="dash-legend" id="dash-donut-rev-legend" style="justify-content:center"></div></div>
         <div class="db-card"><div class="db-h"><h2>Expense Breakdown</h2><span class="db-chip">By account</span></div><canvas id="dash-donut" aria-label="Expense breakdown chart"></canvas><div class="dash-legend" id="dash-donut-legend" style="justify-content:center"></div></div>
       </div>
       <div class="db-row r21">
         <div class="db-card"><div class="db-h"><h2>Recent Invoices</h2><select id="dash-inv-filter" class="db-sel" aria-label="Filter invoices"><option value="all">All Invoices</option><option value="open">Unpaid / Partial</option><option value="overdue">Overdue</option><option value="paid">Paid</option></select></div><div class="tw"><table class="db-table"><thead><tr><th style="width:44px"></th><th>Invoice ID</th><th>Customer</th><th>Date</th><th class="r">Amount</th><th class="r">Paid</th><th>Status</th></tr></thead><tbody id="dash-inv-body"></tbody></table></div></div>
-        <div class="db-card"><div class="db-h"><h2>Activity Summary</h2><span class="db-chip" id="dash-vs-chip">vs previous period</span></div><div id="dash-activity-kpis" class="db-stats"></div></div>
+        <div class="db-card"><div class="db-h"><h2>Activity Summary</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><select id="dash-act" class="db-sel" aria-label="Activity summary period"><option value="period">Reporting period</option><option value="week">Weekly</option><option value="month">Monthly</option></select><span class="db-chip" id="dash-vs-chip">vs previous period</span></div></div><div id="dash-activity-kpis" class="db-stats"></div></div>
       </div>
       <div class="dash-grid">
         <div class="dash-panel"><h2>Cash Flow</h2><div class="dash-muted">Cash and bank movements by month</div><canvas id="dash-cash-chart" aria-label="Cash flow chart"></canvas><div class="dash-legend"><span><i class="dash-dot" style="background:#8b5cf6"></i>Net movement</span><span><i class="dash-dot" style="background:#94a3b8"></i>Zero line</span></div></div>
@@ -376,13 +376,14 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
     <div class="card"><h2 id="pr-title" style="margin-bottom:10px">Add Item</h2><div class="grid">
       <div><label>Code / SKU</label><input id="pr-code"></div><div><label>Name</label><input id="pr-name"></div>
       <div><label>Type</label><select id="pr-type"><option value="service">Service</option><option value="package">Package (prepaid sessions)</option><option value="product">Product (goods)</option></select></div>
+      <div><label>Account code (main 500-0000)</label><select id="pr-acct"></select></div>
       <div><label>Unit price (MYR)</label><input type="number" id="pr-price" min="0" step="0.01"></div><div><label>Duration (min, for booking)</label><input type="number" id="pr-dur" min="0"></div>
       <div class="pk hide"><label>Sessions in package</label><input type="number" id="pr-sess" min="1"></div><div class="pk hide"><label>Valid for (days, 0 = no expiry)</label><input type="number" id="pr-valid" min="0" value="0"></div>
       <div class="pd hide"><label>Track stock?</label><select id="pr-track"><option value="">No</option><option value="1">Yes</option></select></div>
       <div style="grid-column:span 2"><label>Description (default text on invoice)</label><input id="pr-desc"></div>
       <div><button class="btn" id="pr-save">Save Item</button> <button class="sm" id="pr-cancel">Clear</button></div></div></div>
     <div class="card"><div class="row"><h2>Inventory</h2><select id="pr-filter" style="width:170px"><option value="all">All types</option><option value="service">Services</option><option value="package">Packages</option><option value="product">Products</option></select></div>
-      <div class="tw"><table><thead><tr><th>Code</th><th>Name</th><th>Type</th><th class="r">Price</th><th>Details / Stock</th><th></th></tr></thead><tbody id="pr-body"></tbody></table></div></div>
+      <div class="tw"><table><thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Account code</th><th class="r">Price</th><th>Details / Stock</th><th></th></tr></thead><tbody id="pr-body"></tbody></table></div></div>
   </section>
   <!-- TAB: Profit & Loss -->
   <section id="t-pl" class="hide"><div class="card"><div class="row"><h2>Profit &amp; Loss Statement (MYR)</h2>
@@ -720,7 +721,7 @@ $('cm-save').onclick = () => {
   if (!code || !name) return alert('Code and name are required.'); if (coaCodeTaken(code, kind, key)) return alert('This code is already used.');
   if (kind === 'acct') {
     const a = S.coa.accts.find(x => x.name === key); if (!a) return; if (name !== key && (coaNameTaken(name, key) || Object.values(SYS).some(x => x.toLowerCase() === name.toLowerCase()))) return alert('An account with this name already exists.');
-    if (name !== key) { S.journal.forEach(j => { if (j.acct === key) j.acct = name; }); S.entries.forEach(e => { if (e.acct === key) e.acct = name; }); if (S.ob && S.ob.amts && key in S.ob.amts) { S.ob.amts[name] = S.ob.amts[key]; delete S.ob.amts[key]; } }
+    if (name !== key) { S.journal.forEach(j => { if (j.acct === key) j.acct = name; }); S.entries.forEach(e => { if (e.acct === key) e.acct = name; }); if (S.ob && S.ob.amts && key in S.ob.amts) { S.ob.amts[name] = S.ob.amts[key]; delete S.ob.amts[key]; } S.products.forEach(p => { if (p.acct === key) p.acct = name; }); }
     a.code = code; a.name = name; a.cat = $('cm-cat').value || a.cat;
   } else {
     const c = S.coa.cats.find(x => x.code === key); if (!c) return; S.coa.accts.forEach(a => { if (a.cat === key) a.cat = code; }); c.code = code; c.name = name; if (!$('cm-type').disabled) c.type = $('cm-type').value;
@@ -729,6 +730,7 @@ $('cm-save').onclick = () => {
 };
 window.coaDelAcct = n => {
   const a = coaA(n); if (!a) return; if (coaSys(n)) return alert('System accounts cannot be removed.'); if (a.cust) return alert('This is a customer account. It is removed automatically when the customer is deleted (if it has no transactions).'); if (acctUsed(n)) return alert('This account already has transactions and cannot be removed.');
+  const nl = S.products.filter(p => p.acct === n).length; if (nl) return alert('This account is linked to ' + nl + ' inventory item(s). Change those items first.');
   if (!confirm('Delete account ' + a.code + ' ' + n + '?')) return; S.coa.accts = S.coa.accts.filter(x => x.name !== n); coaSync(); save(); fillAccts(); renderAll();
 };
 window.coaDelCat = code => {
@@ -770,6 +772,27 @@ function dashDrawLine(canvasId,labels,values){
 }
 function dashMonthly(from,to){const a=new Date(from+'T00:00:00'),b=new Date(to+'T00:00:00'),out=[];let d=new Date(a.getFullYear(),a.getMonth(),1),limit=0;while(d<=b&&limit++<24){const st=dashDate(d),en=dashDate(new Date(d.getFullYear(),d.getMonth()+1,0)),lo=st<from?from:st,hi=en>to?to:en,p=plData(lo,hi),cash=net(SYS.cash,lo,hi)+net(SYS.bank,lo,hi);out.push({label:d.toLocaleDateString('en-MY',{month:'short'}),revenue:p.ti,expense:p.te,cash});d=new Date(d.getFullYear(),d.getMonth()+1,1);}return out;}
 
+/* Revenue & Expenses 图表分组：以报告期末日 to 为终点，向前取 12 个月 / 8 个季度 / 6 个半年 / 5 个年度 */
+function dashGrouped(to,mode){
+  const e=new Date(to+'T00:00:00'),Y=e.getFullYear(),M=e.getMonth(),yy=n=>String(n).slice(-2),out=[];
+  const size={month:1,quarter:3,half:6,year:12}[mode]||1,count={month:12,quarter:8,half:6,year:5}[mode]||12;
+  const idx=Math.floor(M/size);                                   // 终点所在的区间序号（年内）
+  const per=12/size;                                              // 每年有几个区间
+  for(let k=count-1;k>=0;k--){
+    let n=idx-k,yr=Y;while(n<0){n+=per;yr--;}
+    const st=new Date(yr,n*size,1),en=new Date(yr,n*size+size,0),lo=dashDate(st),hi0=dashDate(en),hi=hi0>to?to:hi0,p=plData(lo,hi),cash=net(SYS.cash,lo,hi)+net(SYS.bank,lo,hi);
+    const label=mode==='month'?st.toLocaleDateString('en-MY',{month:'short'})+(st.getMonth()===0||k===count-1?' '+yy(yr):''):mode==='quarter'?'Q'+(n+1)+' '+yy(yr):mode==='half'?'H'+(n+1)+' '+yy(yr):String(yr);
+    out.push({label,revenue:p.ti,expense:p.te,cash});
+  }
+  return out;
+}
+/* Activity Summary 过滤：Reporting period（默认）/ Weekly（周一至周日）/ Monthly，均以报告期结束日 to 所在的周 / 月对比上一周 / 上个月 */
+function dashActRange(from,to,pFrom,pTo,lbl){
+  const m=($('dash-act')||{}).value||'period',e=new Date(to+'T00:00:00'),sd=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;},sh=x=>x.toLocaleDateString('en-MY',{day:'numeric',month:'short'});
+  if(m==='week'){const ws=sd(e,-((e.getDay()+6)%7)),we=sd(ws,6),ps=sd(ws,-7),pe=sd(ws,-1);return{a:dashDate(ws),b:dashDate(we),c:dashDate(ps),d:dashDate(pe),lbl:sh(ws)+' – '+sh(we)+' · vs previous week'};}
+  if(m==='month'){const ms=new Date(e.getFullYear(),e.getMonth(),1),me=new Date(e.getFullYear(),e.getMonth()+1,0),ps=new Date(e.getFullYear(),e.getMonth()-1,1),pe=new Date(e.getFullYear(),e.getMonth(),0),f=x=>x.toLocaleDateString('en-MY',{month:'short',year:'numeric'});return{a:dashDate(ms),b:dashDate(me),c:dashDate(ps),d:dashDate(pe),lbl:f(ms)+' · vs '+f(ps)};}
+  return{a:from,b:to,c:pFrom,d:pTo,lbl};
+}
 function dashRR(ctx,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h));ctx.beginPath();ctx.moveTo(x,y+h);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h);ctx.closePath();}
 function dashDrawBars2(canvasId,labels,series){      // 圆角渐变柱 + 浅色底槽（参考图的柱状图风格）
   const c=$(canvasId);if(!c)return;const ctx=c.getContext('2d'),w=Math.max(260,c.clientWidth||300),h=parseInt(getComputedStyle(c).height)||270,dpr=window.devicePixelRatio||1;
@@ -818,7 +841,7 @@ function dashRender(){
     +tile('📈',p.np>=0?'#6ee7b7':'#fda4af',p.np>=0?'#059669':'#ef4444','Net Profit',fmt(p.np),p.np>=0?'pos':'neg',tr(p.np,pp.np,true)+' <span>· margin '+margin.toFixed(1)+'%</span>')+tile('🏦','#93c5fd','#2563eb','Cash & Bank',fmt(cashBal),cashBal>=0?'':'neg',tr(cashBal,pCash,true));
   $('dash-kpis2').innerHTML=tile('🧮','#fcd34d','#f59e0b','Accounts Receivable',fmt(arTotal),'',arInv.length+' open invoices')+tile('⏰','#fdba74','#ea580c','Overdue Receivables',fmt(overdue),overdue?'neg':'','Past due by '+to)
     +tile('🗂️','#c4b5fd','#7c3aed','Invoices Issued',String(invIn(from,to).length),'',tr(invIn(from,to).length,invIn(pFrom,pTo).length,true))+tile('📊','#f9a8d4','#db2777','Average Invoice',fmt(avgOf(invIn(from,to))),'',tr(avgOf(invIn(from,to)),avgOf(invIn(pFrom,pTo)),true));
-  const monthly=dashMonthly(from,to);dashDrawBars2('dash-revenue-chart',monthly.map(x=>x.label),[{values:monthly.map(x=>x.revenue),c1:'#67e8f9',c2:'#0891b2'},{values:monthly.map(x=>x.expense),c1:'#fda4af',c2:'#ef4444'}]);dashDrawLine('dash-cash-chart',monthly.map(x=>x.label),monthly.map(x=>x.cash));
+  const monthly=dashMonthly(from,to),grp=dashGrouped(to,($('dash-grp')||{}).value||'month');dashDrawBars2('dash-revenue-chart',grp.map(x=>x.label),[{values:grp.map(x=>x.revenue),c1:'#67e8f9',c2:'#0891b2'},{values:grp.map(x=>x.expense),c1:'#fda4af',c2:'#ef4444'}]);dashDrawLine('dash-cash-chart',monthly.map(x=>x.label),monthly.map(x=>x.cash));
   const aging={'Not yet due':0,'1–30 days':0,'31–60 days':0,'61–90 days':0,'90+ days':0};arInv.forEach(({v,s})=>{const days=v.due&&v.due<to?Math.max(0,Math.floor((new Date(to+'T00:00:00')-new Date(v.due+'T00:00:00'))/864e5)):0;const key=days===0?'Not yet due':days<=30?'1–30 days':days<=60?'31–60 days':days<=90?'61–90 days':'90+ days';aging[key]+=s.out;});
   $('dash-ar-summary').innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;margin:12px 0"><div><small class="dash-muted">Total outstanding</small><div style="font-size:22px;font-weight:750;color:#f59e0b">${fmt(arTotal)}</div></div><div style="text-align:right"><small class="dash-muted">Overdue</small><div class="neg" style="font-size:18px;font-weight:700">${fmt(overdue)}</div></div></div>`;
   const ageMax=Math.max(1,...Object.values(aging));$('dash-aging').innerHTML=Object.entries(aging).map(([n,v],ix)=>`<div class="dash-bar-row"><span>${n}</span><div class="dash-track"><div class="dash-fill" style="width:${v/ageMax*100}%;background:${['#10b981','#84cc16','#f59e0b','#f97316','#ef4444'][ix]}"></div></div><b>${fmt(v)}</b></div>`).join('');
@@ -829,9 +852,9 @@ function dashRender(){
   $('dash-customer-summary').innerHTML=`<div class="dash-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:12px 0"><div><small class="dash-muted">Total customers</small><div style="font-size:22px;font-weight:750;color:#8b5cf6">${S.customers.length}</div></div><div><small class="dash-muted">New customers</small><div style="font-size:22px;font-weight:750;color:#10b981">${newCust}</div></div></div>`;
   $('dash-top-customers').innerHTML=topCust.length?topCust.map(([id,v],ix)=>{const c=S.customers.find(x=>x.id===id);const name=c?.name||String(id);return `<div class="dash-bar-row"><span title="${dashEsc(name)}">${dashEsc(name.slice(0,22))}</span><div class="dash-track"><div class="dash-fill" style="width:${v/custMax*100}%;background:${['#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6'][ix]}"></div></div><b>${fmt(v)}</b></div>`;}).join(''):'<div class="dash-empty">No customer invoices in this period.</div>';
   const invCount=S.invoices.filter(v=>!v.void&&dashInRange(v.date,from,to)).length,payCount=S.payments.filter(x=>dashInRange(x.date,from,to)).length,entryCount=S.entries.filter(x=>!x.invoiceId&&dashInRange(x.date,from,to)).length,apptCount=S.appts.filter(x=>dashInRange(x.date,from,to)).length;
-  const cnt=(x,y)=>({inv:S.invoices.filter(v=>!v.void&&dashInRange(v.date,x,y)).length,pay:S.payments.filter(q=>dashInRange(q.date,x,y)).length,ent:S.entries.filter(q=>!q.invoiceId&&dashInRange(q.date,x,y)).length,ap:S.appts.filter(q=>dashInRange(q.date,x,y)).length}),c0=cnt(from,to),c1=cnt(pFrom,pTo);
+  const cnt=(x,y)=>({inv:S.invoices.filter(v=>!v.void&&dashInRange(v.date,x,y)).length,pay:S.payments.filter(q=>dashInRange(q.date,x,y)).length,ent:S.entries.filter(q=>!q.invoiceId&&dashInRange(q.date,x,y)).length,ap:S.appts.filter(q=>dashInRange(q.date,x,y)).length}),ag=dashActRange(from,to,pFrom,pTo,lbl),c0=cnt(ag.a,ag.b),c1=cnt(ag.c,ag.d);
   const st=(label,cur,prev,color)=>`<div class="db-stat" style="--c:${color}"><div><small>${label}</small><b>${cur}</b></div><div class="db-st-tr">${tr(cur,prev,true,true)}</div></div>`;
-  $('dash-vs-chip').textContent=lbl;$('dash-activity-kpis').innerHTML=st('Invoices issued',c0.inv,c1.inv,'#8b5cf6')+st('Receipts / payments',c0.pay,c1.pay,'#10b981')+st('Ledger entries',c0.ent,c1.ent,'#06b6d4')+st('Appointments',c0.ap,c1.ap,'#f59e0b');
+  $('dash-vs-chip').textContent=ag.lbl;$('dash-activity-kpis').innerHTML=st('Invoices issued',c0.inv,c1.inv,'#8b5cf6')+st('Receipts / payments',c0.pay,c1.pay,'#10b981')+st('Ledger entries',c0.ent,c1.ent,'#06b6d4')+st('Appointments',c0.ap,c1.ap,'#f59e0b');
   const recent=[...S.invoices.filter(v=>dashInRange(v.date,from,to)&&!v.void).map(v=>({date:v.date,type:'Invoice',name:v.no+' · '+v.cust,amount:v.total})),...S.payments.filter(x=>dashInRange(x.date,from,to)).map(x=>{const v=S.invoices.find(i=>i.id===x.invId);return{date:x.date,type:'Receipt',name:(x.no||'Receipt')+(v?' · '+v.cust:''),amount:x.amount};}),...S.entries.filter(x=>!x.invoiceId&&dashInRange(x.date,from,to)).map(x=>({date:x.date,type:x.type==='expense'?'Expense':'Income',name:x.ref+' · '+(x.note||x.acct),amount:x.amount})),...S.appts.filter(x=>dashInRange(x.date,from,to)).map(x=>({date:x.date,type:'Appointment',name:(S.customers.find(c=>c.id===x.custId)||{}).name||'Customer',amount:null}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
   $('dash-recent').innerHTML=recent.length?recent.map(x=>{const tc={Invoice:'#8b5cf6',Receipt:'#10b981',Income:'#06b6d4',Expense:'#ef4444',Appointment:'#f59e0b'}[x.type]||'#64748b';return `<div class="dash-act"><div class="dash-act-main"><b>${dashEsc(x.name)}</b><small><span class="dash-pill" style="background:${tc}22;color:${tc}">${x.type}</span> ${x.date}</small></div><strong class="${x.type==='Income'?'inc':x.type==='Expense'?'neg':''}">${x.amount==null?'':fmt(x.amount)}</strong></div>`;}).join(''):'<div class="dash-empty">No activity in this period.</div>';
   const expL=[...p.exp].filter(x=>x[1]>0).sort((x,y)=>y[1]-x[1]),pal=['#ef4444','#f59e0b','#8b5cf6','#3b82f6','#10b981','#94a3b8'],items=expL.slice(0,5).map((x,i)=>({label:x[0],value:x[1],color:pal[i]})),rest=r2(expL.slice(5).reduce((n,x)=>n+x[1],0));if(rest>0)items.push({label:'Others',value:rest,color:pal[5]});
@@ -846,7 +869,7 @@ function renderKpis(){dashRender();}
 function dashInit(){
   const range=$('dash-range');if(!range)return;const now=today();$('dash-from').value=now.slice(0,7)+'-01';$('dash-to').value=now;
   const update=()=>{const custom=range.value==='custom';$('dash-from-wrap').classList.toggle('hide',!custom);$('dash-to-wrap').classList.toggle('hide',!custom);dashRender();};
-  range.onchange=update;if($('dash-inv-filter'))$('dash-inv-filter').onchange=dashInvTable;$('dash-from').onchange=dashRender;$('dash-to').onchange=dashRender;$('dash-refresh').onclick=dashRender;
+  range.onchange=update;if($('dash-inv-filter'))$('dash-inv-filter').onchange=dashInvTable;$('dash-from').onchange=dashRender;$('dash-to').onchange=dashRender;$('dash-refresh').onclick=dashRender;if($('dash-grp'))$('dash-grp').onchange=dashRender;if($('dash-act'))$('dash-act').onchange=dashRender;
   if(!window._dashResizeBound){window.addEventListener('resize',()=>{if(!$('t-dashboard').classList.contains('hide'))dashRender();});window._dashResizeBound=true;}
   update();
 }
@@ -1239,29 +1262,45 @@ const findProd = t => { t = (t || '').trim().toLowerCase(); return t && S.produc
 const stockOf = p => r2(S.stockAdj.filter(a => a.prodId === p.id).reduce((s, a) => s + a.qty, 0) - S.invoices.filter(v => !v.void).reduce((s, v) => s + v.items.filter(i => i.prodId === p.id).reduce((t, i) => t + i.qty, 0), 0));
 const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
 let editingProd = null;
+const PR_MAIN = '500-0000';                                   // Inventory 的主科目（类别）：Revenues；子科目（500-0001…）可被多个 item 共用
+const prSubs = () => { coaEnsure(); return S.coa.accts.filter(a => a.cat === PR_MAIN && !a.cust).sort(coaByCode); };
+const prAcctLabel = n => { const a = n && coaA(n); return a ? a.code + ' ' + a.name : PR_MAIN; };
+function prAcctFill(sel) {
+  const cat = S.coa.cats.find(c => c.code === PR_MAIN), v = sel !== undefined ? sel : $('pr-acct').value;
+  $('pr-acct').innerHTML = `<option value="">${PR_MAIN} ${esc(cat ? cat.name : 'Revenues')} (main)</option>` + prSubs().map(a => `<option value="${esc(a.name)}">${esc(a.code)} ${esc(a.name)}</option>`).join('') + '<option value="__new">＋ New sub account…</option>';
+  $('pr-acct').value = [...$('pr-acct').options].some(o => o.value === v) ? v : '';
+}
+$('pr-acct').onchange = () => {
+  if ($('pr-acct').value !== '__new') return;
+  const name = (prompt('New sub account name (under ' + PR_MAIN + '):') || '').trim();
+  if (!name) return prAcctFill('');
+  if (coaNameTaken(name) || Object.values(SYS).some(x => x.toLowerCase() === name.toLowerCase())) { alert('An account with this name already exists.'); return prAcctFill(''); }
+  const code = coaNextCode(PR_MAIN); S.coa.accts.push({ code, name, cat: PR_MAIN }); coaSync(); save(); fillAccts(); prAcctFill(name);
+};
 function prFields() { const t = $('pr-type').value; document.querySelectorAll('.pk').forEach(e => e.classList.toggle('hide', t !== 'package')); document.querySelectorAll('.pd').forEach(e => e.classList.toggle('hide', t !== 'product')); }
 $('pr-type').onchange = prFields; $('pr-filter').onchange = () => renderInventory();
-function clearProdForm() { editingProd = null; ['code', 'name', 'price', 'sess', 'desc', 'dur'].forEach(k => $('pr-' + k).value = ''); $('pr-valid').value = 0; $('pr-track').value = ''; $('pr-type').value = 'service'; $('pr-title').textContent = 'Add Item'; prFields(); }
+function clearProdForm() { editingProd = null; ['code', 'name', 'price', 'sess', 'desc', 'dur'].forEach(k => $('pr-' + k).value = ''); $('pr-valid').value = 0; $('pr-track').value = ''; $('pr-type').value = 'service'; prAcctFill(''); $('pr-title').textContent = 'Add Item'; prFields(); }
 $('pr-cancel').onclick = clearProdForm;
 $('pr-save').onclick = () => {
   const d = { code: $('pr-code').value.trim(), name: $('pr-name').value.trim(), type: $('pr-type').value, price: r2(parseFloat($('pr-price').value) || 0), desc: $('pr-desc').value.trim(),
-    sessions: parseInt($('pr-sess').value) || 0, dur: parseInt($('pr-dur').value) || 0, validDays: parseInt($('pr-valid').value) || 0, track: $('pr-track').value === '1' };
+    sessions: parseInt($('pr-sess').value) || 0, dur: parseInt($('pr-dur').value) || 0, validDays: parseInt($('pr-valid').value) || 0, track: $('pr-track').value === '1', acct: $('pr-acct').value === '__new' ? '' : $('pr-acct').value };
   if (!d.name) return alert('Item name is required.');
   if (d.type === 'package' && d.sessions < 1) return alert('A package needs at least 1 session.');
   if (S.products.some(p => p.id !== editingProd && (p.name.toLowerCase() === d.name.toLowerCase() || (d.code && p.code.toLowerCase() === d.code.toLowerCase())))) return alert('An item with this name or code already exists.');
   if (editingProd) Object.assign(prod(editingProd), d); else S.products.push({ id: uid(), ...d });
   clearProdForm(); save(); renderAll();
 };
-window.editProd = id => { const p = prod(id); editingProd = id; $('pr-code').value = p.code; $('pr-name').value = p.name; $('pr-type').value = p.type; $('pr-price').value = p.price; $('pr-sess').value = p.sessions || ''; $('pr-valid').value = p.validDays || 0; $('pr-track').value = p.track ? '1' : ''; $('pr-desc').value = p.desc; $('pr-dur').value = p.dur || ''; $('pr-title').textContent = 'Edit Item (past invoices keep their original text)'; prFields(); window.scrollTo(0, 0); };
+window.editProd = id => { const p = prod(id); editingProd = id; $('pr-code').value = p.code; $('pr-name').value = p.name; $('pr-type').value = p.type; $('pr-price').value = p.price; $('pr-sess').value = p.sessions || ''; $('pr-valid').value = p.validDays || 0; $('pr-track').value = p.track ? '1' : ''; $('pr-desc').value = p.desc; $('pr-dur').value = p.dur || ''; prAcctFill(p.acct && coaA(p.acct) ? p.acct : ''); $('pr-title').textContent = 'Edit Item (past invoices keep their original text)'; prFields(); window.scrollTo(0, 0); };
 window.delProd = id => { if (S.invoices.some(v => v.items.some(i => i.prodId === id))) return alert('This item is used on invoices and cannot be deleted.'); if (!confirm('Delete this item?')) return; S.products = S.products.filter(p => p.id !== id); S.stockAdj = S.stockAdj.filter(a => a.prodId !== id); save(); renderAll(); };
 window.restock = id => { const q = parseFloat(prompt('Quantity received (negative number = adjust down):')); if (!q) return; S.stockAdj.push({ id: uid(), prodId: id, date: today(), qty: q }); save(); renderAll(); };
 function renderInventory() {
+  prAcctFill();
   $('prod-list').innerHTML = S.products.map(p => `<option value="${esc(p.name)}">${esc((p.code ? p.code + ' · ' : '') + p.type + ' · ' + fmt(p.price))}</option>`).join('');   // 开单时的下拉联想
   const f = $('pr-filter').value, typ = { service: 'Service', package: 'Package', product: 'Product' };
   $('pr-body').innerHTML = S.products.filter(p => f === 'all' || p.type === f).map(p => { const st = p.track ? stockOf(p) : null;
-    return `<tr><td>${esc(p.code)}</td><td><b>${esc(p.name)}</b><br><small style="color:#6b7280">${esc(p.desc)}</small></td><td>${typ[p.type]}</td><td class="r">${fmt(p.price)}</td>
+    return `<tr><td>${esc(p.code)}</td><td><b>${esc(p.name)}</b><br><small style="color:#6b7280">${esc(p.desc)}</small></td><td>${typ[p.type]}</td><td>${esc(prAcctLabel(p.acct))}</td><td class="r">${fmt(p.price)}</td>
     <td>${p.type === 'package' ? p.sessions + ' sessions' + (p.validDays ? ' · ' + p.validDays + ' days' : '') : p.track ? `<b class="${st <= 0 ? 'neg' : ''}">${st}</b> in stock` : '-'}</td>
-    <td>${p.track ? `<button class="sm" onclick="restock('${p.id}')">Restock</button>` : ''}<button class="sm" onclick="editProd('${p.id}')">Edit</button><button class="sm del" onclick="delProd('${p.id}')">Delete</button></td></tr>`; }).join('') || empty(6);
+    <td>${p.track ? `<button class="sm" onclick="restock('${p.id}')">Restock</button>` : ''}<button class="sm" onclick="editProd('${p.id}')">Edit</button><button class="sm del" onclick="delProd('${p.id}')">Delete</button></td></tr>`; }).join('') || empty(7);
 }
 
 /* ===== 客户管理：配套 / 剩余次数 / 服务记录，均与发票关联 ===== */
@@ -1833,9 +1872,9 @@ function drawReceipt() {
   if (r.void) $('inv-view').insertAdjacentHTML('afterbegin', '<div class="wm">VOID</div>');
 }
 const nlb = s => esc(s).replace(/\n/g, '<br>');
-function coHead() {                                   // 单据抬头：Logo / 公司名 / 地址 / 税号
+function coHead(center) {                                   // 单据抬头：Logo / 公司名 / 地址 / 税号；center=true 时整块居中（报表用）
   const c = S.co, ids = [c.taxId && esc(c.taxName || 'Tax') + ' ID No : ' + esc(c.taxId), c.tin && 'TIN: ' + esc(c.tin), c.msic && 'MSIC: ' + esc(c.msic)].filter(Boolean).join(' ');
-  return `<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:22px">${c.logo ? `<img class="logo" src="${c.logo}">` : ''}
+  return `<div style="display:flex;gap:${center ? 8 : 14}px;${center ? 'flex-direction:column;align-items:center;text-align:center;' : 'align-items:flex-start;'}margin-bottom:22px">${c.logo ? `<img class="logo" src="${c.logo}">` : ''}
     <div><b class="cl-name">${esc(c.name || 'Your Company')}</b> <small><b>${esc(c.regNo)}</b></small><br>${nlb(c.address)}${c.phone || c.fax ? '<br>' + [c.phone && 'Tel: ' + esc(c.phone), c.fax && 'Fax: ' + esc(c.fax)].filter(Boolean).join(', ') : ''}${ids ? `<br><i><b>${ids}</b></i>` : ''}</div></div>`;
 }
 function invReceipt(r) {
@@ -2188,7 +2227,6 @@ function rptToggle() { const bs = $('rpt-type').value === 'bs'; $('rpt-from-w').
 function rptBuild() {
   const ty = $('rpt-type').value, f = $('rpt-from').value, t = $('rpt-to').value, co = S.co.name || 'Your Company';
   const title = { pl: 'Profit & Loss Statement', bs: 'Balance Sheet', jr: 'Journal' }[ty];
-  const lvlName = { '12': 'Level 1 + 2 (category & account)', '1': 'Level 1 (category summary)', '2': 'Level 2 (account detail)' }[$('rpt-lvl').value];
   let per, body, lines;
   if (ty === 'bs') { const to = t || today(); per = 'As at ' + dmy(to); body = '<table><tbody>' + bsHtml(to, $('rpt-lvl').value) + '</tbody></table>'; const b = window.bsLast; lines = ['Total Assets: ' + fmt(b.A), 'Total Liabilities: ' + fmt(b.Lb), 'Total Equity: ' + fmt(b.E)]; }
   else {
@@ -2207,7 +2245,7 @@ function rptBuild() {
       lines = [L.length + ' journal lines', 'Total debit: ' + fmt(dr), 'Total credit: ' + fmt(cr)];
     }
   }
-  const html = coHead() + `<div style="text-align:center;margin:0 0 14px"><div style="font-size:20px;font-weight:700">${title}</div><div>${esc(per)}</div><small style="color:#6b7280">Amounts in MYR (RM) · ${lvlName}</small></div>` + body + `<small style="color:#6b7280;display:block;margin-top:12px">Generated on ${dmy(today())}</small>`;
+  const html = coHead(true) + `<div style="text-align:center;margin:0 0 14px"><div style="font-size:20px;font-weight:700">${title}</div><div>${esc(per)}</div></div>` + body + `<small style="color:#6b7280;display:block;margin-top:12px">Generated on ${dmy(today())}</small>`;
   const text = [title + ' – ' + co, per].concat(lines).join('\n');
   const name = ({ pl: 'profit-loss', bs: 'balance-sheet', jr: 'journal' })[ty] + '_' + (ty === 'bs' ? (t || today()) : (f || 'start') + '_to_' + (t || today()));
   return { title, per, html, text, name };
