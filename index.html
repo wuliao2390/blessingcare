@@ -1141,14 +1141,31 @@ window.addVisit = () => {
 var PH_KEY = 'bk_photo_srv_v1', PH_NONE = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" fill="#e5e7eb"/><text x="48" y="46" font-size="11" text-anchor="middle" fill="#6b7280" font-family="sans-serif">Photo not</text><text x="48" y="60" font-size="11" text-anchor="middle" fill="#6b7280" font-family="sans-serif">available</text></svg>');
 function phCfg() { try { const c = JSON.parse(localStorage.getItem(PH_KEY) || 'null'); return c && c.url && c.key ? c : null; } catch (e) { return null; } }
 function phSrc(s) { if (!s || s.indexOf('srv:') !== 0) return s; const c = phCfg(); return c ? c.url + '/p/' + encodeURIComponent(s.slice(4)) + '?k=' + encodeURIComponent(c.key) : PH_NONE; }
-window.phErr = im => { im.onerror = null; im.src = PH_NONE; im.title = 'Photo unavailable – is Tailscale on and the photo server running?'; };
-async function phUpload(dataUrl) {                     // 成功返回 "srv:文件名"；没设置或失败就原样返回（继续存在浏览器里）
+window.phErr = im => { const r = im.dataset.s; if (r && !im.dataset.t) { im.dataset.t = '1'; im.src = phSrc(r); return; }      // 缩略图没有 → 改读原图
+  im.onerror = null; im.src = PH_NONE; im.title = 'Photo unavailable – is Tailscale on and the photo server running?'; };
+function phThumb(s) { return s && s.indexOf('srv:') === 0 ? phSrc(s.replace(/(\.[a-z]+)$/, '_t.jpg')) : s; }
+async function phPost(c, blob, forName) {
+  const r = await fetch(c.url + '/upload?k=' + encodeURIComponent(c.key) + (forName ? '&for=' + encodeURIComponent(forName) : ''), { method: 'POST', headers: { 'Content-Type': blob.type || 'image/jpeg' }, body: blob });
+  if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(); if (!j.name) throw new Error('no name'); return j.name;
+}
+async function phUpload(dataUrl) {                     // 旧照片搬家用：成功返回 "srv:文件名"，失败原样返回
   const c = phCfg(); if (!c) return dataUrl;
+  try { return 'srv:' + await phPost(c, await (await fetch(dataUrl)).blob()); } catch (e) { return dataUrl; }
+}
+function phDraw2(blob, max, q) {                       // 把图片按最长边 max 画成 JPEG（max=0 表示保持原尺寸）
+  return new Promise((res, rej) => { const u = URL.createObjectURL(blob), img = new Image(); img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('img')); };
+    img.onload = () => { const k = max ? Math.min(1, max / Math.max(img.width, img.height)) : 1, cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(u);
+      cv.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/jpeg', q); }; img.src = u; });
+}
+async function phOriginal(f) {                         // 保留原图质量上传（jpg / png / webp 原文件直传；HEIC 等转成原尺寸高质量 JPEG），另存一张缩略图
+  const c = phCfg();
   try {
-    const blob = await (await fetch(dataUrl)).blob();
-    const r = await fetch(c.url + '/upload?k=' + encodeURIComponent(c.key), { method: 'POST', headers: { 'Content-Type': blob.type || 'image/jpeg' }, body: blob });
-    if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(); if (!j.name) throw new Error('no name'); return 'srv:' + j.name;
-  } catch (e) { return dataUrl; }
+    const blob = /^image\/(jpeg|png|webp)$/.test(f.type) ? f : await phDraw2(f, 0, 0.95);
+    const name = await phPost(c, blob);
+    try { await phPost(c, await phDraw2(blob, 480, 0.8), name); } catch (e) {}
+    return 'srv:' + name;
+  } catch (e) { return phCompress(f); }
 }
 function phMsg(t, ok) { $('ph-msg').innerHTML = `<small style="color:${ok ? '#16a34a' : '#dc2626'}">${esc(t)}</small>`; }
 $('ph-save').onclick = () => {
@@ -1171,17 +1188,29 @@ $('ph-mig').onclick = async () => {
 };
 (function () { const c = phCfg(); if (c) { $('ph-url').value = c.url; $('ph-key').value = c.key; } })();
 
-function readPhotos(files, cb) {
-  Promise.all([...files].filter(f => /^image\//.test(f.type)).map(f => new Promise(res => {
+function phCompress(f) {                               // 没有照片服务器时：缩小并压缩，节省浏览器空间
+  return new Promise(res => {
     const rd = new FileReader(); rd.onerror = () => res(null);
     rd.onload = () => { const img = new Image(); img.onerror = () => res(null); img.onload = () => {
       const k = Math.min(1, 720 / Math.max(img.width, img.height)), cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
       const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height); res(cv.toDataURL('image/jpeg', 0.7)); }; img.src = rd.result; };
-    rd.readAsDataURL(f); }))).then(async a => { const out = []; let bad = 0; for (const d of a.filter(Boolean)) { const r = await phUpload(d); if (phCfg() && r.indexOf('data:') === 0) bad++; out.push(r); } if (bad) alert('Could not reach your photo server — ' + bad + ' photo(s) were kept in the browser for now. Use “Move existing photos to my computer” in Settings later.'); cb(out); });
+    rd.readAsDataURL(f); });
 }
-const phHtml = (L, k) => L.map((s, i) => `<div class="ph"><img src="${phSrc(s)}" onerror="phErr(this)" onclick="phOpen('${k}','',${i})"><button type="button" class="x" onclick="phDel('${k}',${i})">×</button></div>`).join('');
+function readPhotos(files, cb) {
+  const useSrv = !!phCfg();
+  (async () => {
+    const out = []; let bad = 0;
+    for (const f of [...files].filter(f => /^image\//.test(f.type) || /\.(heic|heif)$/i.test(f.name))) {
+      const r = useSrv ? await phOriginal(f) : await phCompress(f);
+      if (!r) continue; if (useSrv && r.indexOf('data:') === 0) bad++; out.push(r);
+    }
+    if (bad) alert('Could not reach your photo server — ' + bad + ' photo(s) were kept in the browser (reduced size) for now. Use “Move existing photos to my computer” in Settings later.');
+    cb(out);
+  })();
+}
+const phHtml = (L, k) => L.map((s, i) => `<div class="ph"><img src="${phThumb(s)}" data-s="${s.indexOf('srv:') === 0 ? s : ''}" onerror="phErr(this)" onclick="phOpen('${k}','',${i})"><button type="button" class="x" onclick="phDel('${k}',${i})">×</button></div>`).join('');
 const phThumbs = v => { const L = v.photos || []; if (!L.length) return '<small style="color:#6b7280">-</small>';
-  return '<div class="ph-grid">' + L.slice(0, 3).map((s, i) => `<div class="ph ph-s"><img src="${phSrc(s)}" onerror="phErr(this)" onclick="phOpen('v','${v.id}',${i})"></div>`).join('') + (L.length > 3 ? `<button class="sm" onclick="phOpen('v','${v.id}',3)">+${L.length - 3}</button>` : '') + '</div>'; };
+  return '<div class="ph-grid">' + L.slice(0, 3).map((s, i) => `<div class="ph ph-s"><img src="${phThumb(s)}" data-s="${s.indexOf('srv:') === 0 ? s : ''}" onerror="phErr(this)" onclick="phOpen('v','${v.id}',${i})"></div>`).join('') + (L.length > 3 ? `<button class="sm" onclick="phOpen('v','${v.id}',3)">+${L.length - 3}</button>` : '') + '</div>'; };
 const phList = (k, id) => k === 'p' ? svcPh : k === 'e' ? veSt.photos : ((S.visits.find(v => v.id === id) || {}).photos || []);
 let phSt = { k: '', id: '', i: 0 };
 function phDraw() {
