@@ -492,8 +492,6 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><button class="sm" id="us-p-mgr" type="button">Preset: Manager</button><button class="sm" id="us-p-staff" type="button">Preset: Staff</button><button class="sm" id="us-p-all" type="button">Select all</button><button class="sm" id="us-p-none" type="button">Clear</button></div>
       <div><button class="btn" id="us-save">Add User</button> <button class="sm hide" id="us-cancel" style="padding:9px 14px">Cancel edit</button></div><div id="us-msg" style="margin-top:8px"></div></div>
     <div class="card"><h2 style="margin-bottom:10px">Users</h2><div class="tw"><table><thead><tr><th>Login ID</th><th>Name</th><th>Role</th><th>Modules</th><th>Status</th><th>Last login</th><th></th></tr></thead><tbody id="us-body"></tbody></table></div></div>
-    <div class="card hide" id="us-off-card"><h2 style="margin-bottom:6px">Turn off login</h2><p style="color:var(--mut);margin:0 0 10px">Removes <b>all</b> users so the app opens without a login. Enter your own password to confirm.</p>
-      <div class="grid"><div><label>Your password</label><input id="us-offpw" type="password" autocomplete="current-password"></div><div style="align-self:end"><button class="btn" id="us-off" style="background:#dc2626">Remove all users &amp; turn off login</button></div></div><div id="us-offmsg" style="margin-top:8px"></div></div>
   </section>
 </main>
 
@@ -2489,6 +2487,7 @@ $('al-hint-btn').onclick = () => { const u = S.users.find(x => x.active && x.log
 /* --- 访问控制：隐藏无权限的菜单，显示当前用户 --- */
 function applyAccess() {
   if (!Array.isArray(S.users)) S.users = [];
+  if (!S.users.some(u => u.builtin)) usrEnsureAdmin();
   const on = usersOn(), u = curUser();
   if (on && !u) { if ($('app-login').style.display !== 'flex') alShow(); }
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('hide', !canTab(b.dataset.tab)));
@@ -2518,13 +2517,13 @@ const usrPreset = list => { if ($('us-role').value === 'admin') { $('us-role').v
 $('us-p-mgr').onclick = () => usrPreset(USR_PRESETS.manager); $('us-p-staff').onclick = () => usrPreset(USR_PRESETS.staff); $('us-p-all').onclick = () => usrPreset(TABS.filter(t => t !== 'users')); $('us-p-none').onclick = () => usrPreset([]);
 const usMsg = (t, ok) => { $('us-msg').innerHTML = `<span style="color:${ok ? '#16a34a' : '#dc2626'}">${esc(t)}</span>`; };
 function usrReset() {
-  editingUsr = null; ['us-id', 'us-name', 'us-pw', 'us-pw2', 'us-hint'].forEach(i => $(i).value = ''); const first = !(S.users || []).length;
+  editingUsr = null; $('us-id').disabled = false; ['us-id', 'us-name', 'us-pw', 'us-pw2', 'us-hint'].forEach(i => $(i).value = ''); const first = !(S.users || []).length;
   usrFirstState = first; $('us-role').value = first ? 'admin' : 'user'; $('us-role').disabled = false; $('us-act').value = '1'; $('us-act').disabled = false; usrSetPerms(first ? [] : USR_PRESETS.staff); usrRoleUi();
   $('us-save').textContent = 'Add User'; $('us-cancel').classList.add('hide'); $('us-title').textContent = 'User Maintenance'; $('us-pwl').textContent = 'Password (min. 6 characters)';
-  $('us-note').innerHTML = first ? '<b>No users yet — the app is open to everyone.</b> Create the first user — it must be an Admin and Active (you can add Users, set their modules and use the presets afterwards). As soon as it is saved, a Login ID and password will be required to open the app.' : 'Add users and choose which modules each person can open. Admins can open everything and manage users. Anyone can change their own password from the header. The built-in <b>Admin</b> user starts with the password <b>123456</b> — please change it after the first login.';
+  $('us-note').innerHTML = first ? '<b>No users yet — the app is open to everyone.</b> Create the first user — it must be an Admin and Active (you can add Users, set their modules and use the presets afterwards). As soon as it is saved, a Login ID and password will be required to open the app.' : 'Add users and choose which modules each person can open. Admins can open everything and manage users. Anyone can change their own password from the header. The built-in <b>Admin</b> user always exists, cannot be deleted or disabled, and starts with the password <b>123456</b> — please change it after the first login. Login is always required to open the app.';
 }
 window.usrEdit = id => { const u = S.users.find(x => x.id === id); if (!u) return; usrPermsBuild(); editingUsr = id;
-  $('us-id').value = u.loginId; $('us-name').value = u.name || ''; $('us-pw').value = $('us-pw2').value = ''; $('us-hint').value = u.hint || ''; $('us-role').disabled = false; $('us-act').disabled = false; $('us-role').value = u.role; $('us-act').value = u.active ? '1' : '0'; usrSetPerms(u.perms || []); usrRoleUi();
+  $('us-id').value = u.loginId; $('us-name').value = u.name || ''; $('us-pw').value = $('us-pw2').value = ''; $('us-hint').value = u.hint || ''; $('us-id').disabled = $('us-role').disabled = $('us-act').disabled = !!u.builtin; $('us-role').value = u.role; $('us-act').value = u.active ? '1' : '0'; usrSetPerms(u.perms || []); usrRoleUi();
   $('us-save').textContent = 'Save Changes'; $('us-cancel').classList.remove('hide'); $('us-title').textContent = 'Edit User — ' + u.loginId; $('us-pwl').textContent = 'New password (leave blank to keep the current one)'; $('us-title').scrollIntoView({ behavior: 'smooth' }); };
 $('us-cancel').onclick = () => { usrReset(); $('us-msg').textContent = ''; };
 $('us-save').onclick = async () => {
@@ -2532,6 +2531,7 @@ $('us-save').onclick = async () => {
   const role = $('us-role').value, active = $('us-act').value === '1', perms = role === 'admin' ? [] : usrGetPerms(), ex = editingUsr && S.users.find(x => x.id === editingUsr);
   if (loginId.length < 3 || /\s/.test(loginId)) return usMsg('Login ID must be at least 3 characters with no spaces.');
   if (first && (role !== 'admin' || !active)) return usMsg('The first user must be an Admin and Active, so that someone can manage users. Create this Admin first, then add other users with Role / Status / modules.');
+  if (ex && ex.builtin && (loginId !== 'Admin' || role !== 'admin' || !active)) return usMsg('The built-in Admin must stay as Login ID “Admin”, role Admin, and Active. You can change its name and password.');
   if (S.users.some(x => x.id !== editingUsr && x.loginId.toLowerCase() === loginId.toLowerCase())) return usMsg('This Login ID is already used by another user.');
   if (!ex || pw) { if (pw.length < 6) return usMsg('Password must be at least 6 characters.'); if (pw !== pw2) return usMsg('The two passwords do not match.'); if (hint && hint.toLowerCase().includes(pw.toLowerCase())) return usMsg('The hint must not contain the password itself.'); }
   if (role === 'user' && !perms.length) return usMsg('Please tick at least one module for this user.');
@@ -2542,33 +2542,33 @@ $('us-save').onclick = async () => {
   const wasEdit = !!ex; usrReset(); save(); renderAll(); usMsg(first ? 'First Admin created. Login is now required to open the app.' : wasEdit ? 'User updated.' : 'User added.', true);
 };
 window.usrDel = id => { const u = S.users.find(x => x.id === id); if (!u) return;
+  if (u.builtin) return alert('The built-in Admin user cannot be deleted.');
   if (u.id === getSid()) return alert('You cannot delete the account you are signed in with.');
   if (u.active && u.role === 'admin' && S.users.filter(x => x.active && x.role === 'admin').length < 2) return alert('There must always be at least one active Admin.');
   if (!confirm('Delete user ' + u.loginId + '?')) return; S.users = S.users.filter(x => x.id !== id); if (editingUsr === id) usrReset(); save(); renderAll(); };
 { const f = window.usrDel; window.usrDel = (...a) => { cfRetry = () => f(...a); return f(...a); }; }
-$('us-off').onclick = async () => {
-  const u = curUser(); if (!u) return; const r = await userCheck(u, $('us-offpw').value), m = t => { $('us-offmsg').innerHTML = `<span style="color:#dc2626">${esc(t)}</span>`; };
-  if (r === 'nosubtle') return m('This browser cannot verify the password on this page.'); if (r !== true) return m('Your password is incorrect.');
-  S.users = []; setSid(null); $('us-offpw').value = ''; usrReset(); save(); renderAll(); $('us-offmsg').innerHTML = '<span style="color:#16a34a">Login turned off — the app now opens without a password.</span>';
-};
 function renderUsers() {
   if (!Array.isArray(S.users)) S.users = [];
   usrPermsBuild(); if (!$('us-body')) return;
-  const first = !S.users.length; $('us-off-card').classList.toggle('hide', first);
+  const first = !S.users.length;
   if (!editingUsr && usrFirstState !== first) usrReset();                  // 第一位用户 / 已有用户 两种表单状态切换
   const sid = getSid(), n = TABS.length - 1;
-  $('us-body').innerHTML = S.users.slice().sort((a, b) => a.loginId.localeCompare(b.loginId)).map(u => `<tr${u.active ? '' : ' style="opacity:.55"'}><td><b>${esc(u.loginId)}</b>${u.id === sid ? ' <small style="color:var(--mut)">(you)</small>' : ''}</td><td>${esc(u.name || '')}</td><td><span class="badge ${u.role === 'admin' ? 'b-in' : 'b-unpaid'}">${u.role === 'admin' ? 'Admin' : 'User'}</span></td>
+  $('us-body').innerHTML = S.users.slice().sort((a, b) => a.loginId.localeCompare(b.loginId)).map(u => `<tr${u.active ? '' : ' style="opacity:.55"'}><td><b>${esc(u.loginId)}</b>${u.builtin ? ' <span class="badge b-in">Built-in</span>' : ''}${u.id === sid ? ' <small style="color:var(--mut)">(you)</small>' : ''}</td><td>${esc(u.name || '')}</td><td><span class="badge ${u.role === 'admin' ? 'b-in' : 'b-unpaid'}">${u.role === 'admin' ? 'Admin' : 'User'}</span></td>
     <td title="${esc(u.role === 'admin' ? 'All modules' : (u.perms || []).map(TAB_NAME).join(', '))}">${u.role === 'admin' ? 'All' : (u.perms || []).length + ' of ' + n}</td><td>${u.active ? '<span class="badge b-paid">Active</span>' : '<span class="badge b-out">Disabled</span>'}${u.defaultPw ? '<br><small style="color:#d97706">Default password — please change</small>' : ''}</td><td>${u.lastLogin ? dmy(u.lastLogin.slice(0, 10)) + ' ' + new Date(u.lastLogin).toTimeString().slice(0, 5) : '-'}</td>
-    <td style="white-space:nowrap"><button class="sm" onclick="usrEdit('${u.id}')">Edit</button><button class="sm del" onclick="usrDel('${u.id}')">Delete</button></td></tr>`).join('') || empty(7);
+    <td style="white-space:nowrap"><button class="sm" onclick="usrEdit('${u.id}')">Edit</button>${u.builtin ? '' : `<button class="sm del" onclick="usrDel('${u.id}')">Delete</button>`}</td></tr>`).join('') || empty(7);
 }
-async function usrSeed() {                                   // 默认初始用户：Admin / 密码 123456（只建立一次；之后若选择 Turn off login 不会再自动建立）
-  const salt = uid() + uid(), hash = await pwHash('123456', salt);
-  if (S.users.length) return; S.users.push({ id: uid(), loginId: 'Admin', name: 'Admin', role: 'admin', perms: [], active: true, salt, hash, hint: '', created: today(), defaultPw: true }); S.usersInit = true; save(); renderAll();
+var usrEnsuring = false;
+async function usrEnsureAdmin() {                              // 内置 Admin：永远存在、永远启用、不能删除；任何设备打开都必须用它（或其他已建用户）登录
+  if (usrEnsuring) return; if (!Array.isArray(S.users)) S.users = [];
+  const ex = S.users.find(u => (u.loginId || '').toLowerCase() === 'admin');
+  if (ex) { Object.assign(ex, { builtin: true, role: 'admin', active: true, loginId: 'Admin' }); save(); return; }
+  usrEnsuring = true; const salt = uid() + uid(), hash = await pwHash('123456', salt); usrEnsuring = false;
+  if (S.users.some(u => u.builtin)) return; S.users.push({ id: uid(), loginId: 'Admin', name: 'Admin', role: 'admin', perms: [], active: true, salt, hash, hint: '', created: today(), defaultPw: true, builtin: true }); save(); renderAll();
 }
 usrReset();
-if (S.users.length) S.usersInit = true;
 (async () => { for (const u of S.users) if (u.defaultPw && u.loginId === 'Admin' && (await userCheck(u, 'Admin')) === true) { u.salt = uid() + uid(); u.hash = await pwHash('123456', u.salt); save(); } })();   // 旧版本建立、尚未改过的默认密码 Admin → 123456
-if (!S.users.length && !S.usersInit) { alShow(); usrSeed(); } else if (usersOn() && !curUser()) alShow();
+if (!S.users.some(u => u.builtin)) { if (!S.users.some(u => (u.loginId || '').toLowerCase() === 'admin')) alShow(); usrEnsureAdmin(); }
+if (usersOn() && !curUser()) alShow();
 
 /* ===== Settings：Cloud login (Supabase) ===== */
 function clStatus() { $('cl-status').innerHTML = !CLOUD_ENABLED ? '<span class="badge b-unpaid">Off · local mode</span>' : cloudReady ? '<span class="badge b-in">Connected</span> ' + esc(cloudUser && (cloudUser.email || cloudUser.id) || '') : '<span class="badge b-out">On · not signed in</span>'; $('cl-out').classList.toggle('hide', !cloudReady); }
