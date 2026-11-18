@@ -2521,7 +2521,7 @@ function usrReset() {
   editingUsr = null; ['us-id', 'us-name', 'us-pw', 'us-pw2', 'us-hint'].forEach(i => $(i).value = ''); const first = !(S.users || []).length;
   usrFirstState = first; $('us-role').value = first ? 'admin' : 'user'; $('us-role').disabled = false; $('us-act').value = '1'; $('us-act').disabled = false; usrSetPerms(first ? [] : USR_PRESETS.staff); usrRoleUi();
   $('us-save').textContent = 'Add User'; $('us-cancel').classList.add('hide'); $('us-title').textContent = 'User Maintenance'; $('us-pwl').textContent = 'Password (min. 6 characters)';
-  $('us-note').innerHTML = first ? '<b>No users yet — the app is open to everyone.</b> Create the first user — it must be an Admin and Active (you can add Users, set their modules and use the presets afterwards). As soon as it is saved, a Login ID and password will be required to open the app.' : 'Add users and choose which modules each person can open. Admins can open everything and manage users. Anyone can change their own password from the header. The built-in <b>Admin</b> user starts with the password <b>Admin</b> — please change it after the first login.';
+  $('us-note').innerHTML = first ? '<b>No users yet — the app is open to everyone.</b> Create the first user — it must be an Admin and Active (you can add Users, set their modules and use the presets afterwards). As soon as it is saved, a Login ID and password will be required to open the app.' : 'Add users and choose which modules each person can open. Admins can open everything and manage users. Anyone can change their own password from the header. The built-in <b>Admin</b> user starts with the password <b>123456</b> — please change it after the first login.';
 }
 window.usrEdit = id => { const u = S.users.find(x => x.id === id); if (!u) return; usrPermsBuild(); editingUsr = id;
   $('us-id').value = u.loginId; $('us-name').value = u.name || ''; $('us-pw').value = $('us-pw2').value = ''; $('us-hint').value = u.hint || ''; $('us-role').disabled = false; $('us-act').disabled = false; $('us-role').value = u.role; $('us-act').value = u.active ? '1' : '0'; usrSetPerms(u.perms || []); usrRoleUi();
@@ -2561,12 +2561,13 @@ function renderUsers() {
     <td title="${esc(u.role === 'admin' ? 'All modules' : (u.perms || []).map(TAB_NAME).join(', '))}">${u.role === 'admin' ? 'All' : (u.perms || []).length + ' of ' + n}</td><td>${u.active ? '<span class="badge b-paid">Active</span>' : '<span class="badge b-out">Disabled</span>'}${u.defaultPw ? '<br><small style="color:#d97706">Default password — please change</small>' : ''}</td><td>${u.lastLogin ? dmy(u.lastLogin.slice(0, 10)) + ' ' + new Date(u.lastLogin).toTimeString().slice(0, 5) : '-'}</td>
     <td style="white-space:nowrap"><button class="sm" onclick="usrEdit('${u.id}')">Edit</button><button class="sm del" onclick="usrDel('${u.id}')">Delete</button></td></tr>`).join('') || empty(7);
 }
-async function usrSeed() {                                   // 默认初始用户：Admin / 密码 Admin（只建立一次；之后若选择 Turn off login 不会再自动建立）
-  const salt = uid() + uid(), hash = await pwHash('Admin', salt);
+async function usrSeed() {                                   // 默认初始用户：Admin / 密码 123456（只建立一次；之后若选择 Turn off login 不会再自动建立）
+  const salt = uid() + uid(), hash = await pwHash('123456', salt);
   if (S.users.length) return; S.users.push({ id: uid(), loginId: 'Admin', name: 'Admin', role: 'admin', perms: [], active: true, salt, hash, hint: '', created: today(), defaultPw: true }); S.usersInit = true; save(); renderAll();
 }
 usrReset();
 if (S.users.length) S.usersInit = true;
+(async () => { for (const u of S.users) if (u.defaultPw && u.loginId === 'Admin' && (await userCheck(u, 'Admin')) === true) { u.salt = uid() + uid(); u.hash = await pwHash('123456', u.salt); save(); } })();   // 旧版本建立、尚未改过的默认密码 Admin → 123456
 if (!S.users.length && !S.usersInit) { alShow(); usrSeed(); } else if (usersOn() && !curUser()) alShow();
 
 /* ===== Settings：Cloud login (Supabase) ===== */
