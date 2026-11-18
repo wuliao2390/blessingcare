@@ -182,23 +182,33 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
 </head>
 <body>
 <style>
+.tabs button.hide{display:none!important}
+#app-login,#pw-modal{position:fixed;inset:0;z-index:10000;background:#0f172a;display:none;align-items:center;justify-content:center;padding:18px;font-family:system-ui,sans-serif}
+#al-box,#pw-box{width:min(380px,100%);background:var(--card);color:var(--tx);border-radius:16px;padding:24px;box-shadow:0 20px 60px #0006}#al-box h2,#pw-box h2{font-size:20px;margin:0 0 4px}#al-box p{color:var(--mut);margin:0 0 14px}#al-box input,#pw-box input{margin:5px 0 12px}#al-box .btn{width:100%}
 #cloud-gate{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.72);display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,sans-serif}
 #cloud-box{width:min(520px,100%);max-height:92vh;overflow:auto;background:var(--card);color:var(--tx);border-radius:16px;padding:22px;box-shadow:0 20px 60px #0004}
 #cloud-box h2{font-size:20px;margin:0 0 8px}#cloud-box p{color:#64748b;margin:8px 0 14px}#cloud-box input{margin:5px 0 12px}#cloud-box button{margin:4px 6px 4px 0}#cloud-status{font-size:12px;color:#64748b;margin-left:8px}
 #cloud-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 24px;background:var(--sel);border-bottom:1px solid var(--bd);font-size:12px}
 #cloud-conflict{display:none;position:fixed;z-index:9998;inset:auto 12px 12px 12px;background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:14px;box-shadow:0 8px 30px #0002}
 </style>
+<div id="app-login"><div id="al-box"><h2 id="al-co">🔒 Sign in</h2><p>Enter your Login ID and password to open the app.</p>
+<label>Login ID</label><input id="al-id" autocomplete="username"><label>Password</label><input id="al-pw" type="password" autocomplete="current-password">
+<button class="btn" id="al-go" type="button">Login</button><div id="al-msg" style="margin-top:10px;color:#dc2626;min-height:18px"></div>
+<button class="sm hide" id="al-hint-btn" type="button" style="margin-top:6px">Show password hint</button><div id="al-hint" style="margin-top:6px;color:var(--mut)"></div></div></div>
+<div id="pw-modal"><div id="pw-box"><h2>🔑 Change my password</h2><label>Current password</label><input id="pm-cur" type="password" autocomplete="current-password"><label>New password (min. 6 characters)</label><input id="pm-new" type="password" autocomplete="new-password"><label>Confirm new password</label><input id="pm-new2" type="password" autocomplete="new-password">
+<div style="display:flex;gap:8px"><button class="btn" id="pm-save" type="button">Save</button><button class="sm" id="pm-cancel" type="button" style="padding:9px 14px">Cancel</button></div><div id="pm-msg" style="margin-top:10px;min-height:18px"></div></div></div>
 <div id="cloud-gate"><div id="cloud-box"><h2>☁️ Micro Bookkeeping Cloud</h2><p>请先登录 Supabase 账号。电脑与手机必须使用同一个账号。</p>
 <label>Email</label><input id="cloud-email" type="email" autocomplete="username" placeholder="your@email.com">
 <label>Password</label><input id="cloud-password" type="password" autocomplete="current-password" placeholder="Password">
 <div><button class="btn" id="cloud-login">Login</button><button class="sm" id="cloud-signup">Create account</button></div>
-<small id="cloud-auth-msg" style="color:#64748b"></small></div></div>
+<small id="cloud-auth-msg" style="color:#64748b"></small>
+<div style="margin-top:12px"><button class="sm" id="cloud-localmode" type="button">无法登录？改用本机模式（关闭云端）</button></div></div></div>
 <div id="cloud-conflict"><b>⚠️ 检测到资料版本冲突</b><p id="cloud-conflict-msg">另一台设备已更新云端资料。为避免覆盖，自动上传已暂停。</p><button class="btn" id="cloud-use-server">使用云端版本（覆盖本机未同步修改）</button><button class="sm" id="cloud-keep-local">保留本机版本并尝试重新上传</button></div>
 <div id="sb-back"></div>
-<header><div style="display:flex;align-items:center;gap:12px"><button class="sm" id="nav-btn" type="button" aria-label="Menu">☰</button><h1 id="page-title">Dashboard Overview</h1></div><div style="display:flex;gap:12px;align-items:center"><small style="color:#6b7280">Currency: MYR (RM)</small><button class="sm" id="theme-btn" type="button" title="Switch dark / light mode" style="margin:0">🌙 Dark</button></div></header>
+<header><div style="display:flex;align-items:center;gap:12px"><button class="sm" id="nav-btn" type="button" aria-label="Menu">☰</button><h1 id="page-title">Dashboard Overview</h1></div><div style="display:flex;gap:12px;align-items:center"><span id="hdr-user" class="hide" style="align-items:center;gap:6px"><small style="color:#6b7280">👤 <b id="hdr-name"></b></small><button class="sm" id="hdr-pw" type="button" style="margin:0">Password</button><button class="sm" id="hdr-out" type="button" style="margin:0">Logout</button></span><small style="color:#6b7280">Currency: MYR (RM)</small><button class="sm" id="theme-btn" type="button" title="Switch dark / light mode" style="margin:0">🌙 Dark</button></div></header>
 <div id="cloud-toolbar"><b>☁️ Cloud:</b> <span id="cloud-user-label">Not signed in</span><span id="cloud-status">Please sign in</span><span style="flex:1"></span><button class="sm" id="cloud-sync-now">Sync now</button><button class="sm" id="cloud-backup">Download backup</button><button class="sm" id="cloud-logout">Logout</button></div>
 <main>
-  <div class="tabs" id="sidebar"><div class="sb-brand"><h1 id="brand">📒 Micro Bookkeeping</h1></div><button data-tab="dashboard" data-ic="🏠" class="on">Dashboard</button><button data-tab="ledger" data-ic="📖">Ledger</button><button data-tab="jv" data-ic="📝">Journal Entry</button><button data-tab="invoices" data-ic="🧾">Invoices</button><button data-tab="schedule" data-ic="📅">Schedule</button><button data-tab="customers" data-ic="👥">Customers</button><button data-tab="inventory" data-ic="📦">Inventory</button><button data-tab="ar" data-ic="⏳">Receivables (A/R)</button><button data-tab="pl" data-ic="📈">Profit &amp; Loss</button><button data-tab="bs" data-ic="⚖️">Balance Sheet</button><button data-tab="rpt" data-ic="📊">Reports</button><button data-tab="accounts" data-ic="🧮">Accounts &amp; Tax</button><button data-tab="coa" data-ic="🗂️">Account Maintenance</button><button data-tab="settings" data-ic="⚙️">Settings</button></div>
+  <div class="tabs" id="sidebar"><div class="sb-brand"><h1 id="brand">📒 Micro Bookkeeping</h1></div><button data-tab="dashboard" data-ic="🏠" class="on">Dashboard</button><button data-tab="ledger" data-ic="📖">Ledger</button><button data-tab="jv" data-ic="📝">Journal Entry</button><button data-tab="invoices" data-ic="🧾">Invoices</button><button data-tab="schedule" data-ic="📅">Schedule</button><button data-tab="customers" data-ic="👥">Customers</button><button data-tab="inventory" data-ic="📦">Inventory</button><button data-tab="ar" data-ic="⏳">Receivables (A/R)</button><button data-tab="pl" data-ic="📈">Profit &amp; Loss</button><button data-tab="bs" data-ic="⚖️">Balance Sheet</button><button data-tab="rpt" data-ic="📊">Reports</button><button data-tab="accounts" data-ic="🧮">Accounts &amp; Tax</button><button data-tab="coa" data-ic="🗂️">Account Maintenance</button><button data-tab="settings" data-ic="⚙️">Settings</button><button data-tab="users" data-ic="🔑">User Maintenance</button></div>
 
   <!-- TAB: Dashboard -->
   <section id="t-dashboard">
@@ -360,6 +370,16 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
         <span class="vsw"><button class="sm" id="sc-vday">Day</button><button class="sm" id="sc-vweek">Week</button></span></div></div>
       <div id="sc-lunar" class="sc-lunar"></div><div id="sc-week" class="sc-week"></div><div id="sc-grid"></div>
       <small style="color:#6b7280;display:block;margin-top:6px">Tap an empty slot to start a booking at that time; tap an appointment block to edit it. The red line is the current time.</small></div>
+    <div class="card"><h2 id="ap-title" style="margin-bottom:10px">New Appointment</h2><div class="grid">
+      <div><label>Customer</label><select id="ap-cust"></select></div><div><label>Date</label><input type="date" id="ap-date"></div><div><label>Time</label><input type="time" id="ap-time" value="10:00"></div><div><label>Duration (min)</label><input type="number" id="ap-dur" value="60" min="5" step="5"></div>
+      <div><label>Service (from Inventory)</label><select id="ap-prod"></select></div><div><label>Service name</label><input id="ap-svc"></div>
+      <div><label>Use package</label><select id="ap-pkg"></select></div><div><label>Staff</label><input id="ap-staff"></div>
+      <div style="grid-column:span 2"><label>Notes</label><input id="ap-notes"></div>
+      <div><button class="btn" id="ap-save">Book Appointment</button> <button class="sm hide" id="ap-cancel" style="padding:9px 14px">Cancel edit</button></div></div>
+      <small id="ap-info" style="color:#6b7280;display:block;margin-top:8px"></small></div>
+    <div class="card"><h2 style="margin-bottom:10px">Appointments — <span id="sc-daytxt"></span></h2><div class="tw"><table><thead><tr><th>Time</th><th>Customer</th><th>Service</th><th>Staff</th><th>Status</th><th>A/R · Billing</th><th></th></tr></thead><tbody id="sc-body"></tbody></table></div></div>
+    <div class="card"><div class="row"><h2>WhatsApp Reminders</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="rm-range" style="width:auto"><option value="today">Today</option><option value="tomorrow" selected>Tomorrow</option><option value="week">Next 7 days</option></select><button class="btn" id="rm-all" style="background:#16a34a">Send all unsent</button></div></div>
+      <div class="tw"><table><thead><tr><th>When</th><th>Customer</th><th>Service</th><th>Phone</th><th>Reminder</th><th></th></tr></thead><tbody id="rm-body"></tbody></table></div></div>
     <div class="card"><div class="row"><h2 id="bk-title">Blocked Days / Periods</h2></div>
       <small style="color:#6b7280;display:block;margin:-4px 0 8px">Block a whole day, several days, or a time range (e.g. holiday, leave, training). Blocked times are shaded on the schedule and cannot be booked.</small>
       <div class="grid">
@@ -369,16 +389,6 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
         <div style="grid-column:span 2"><label>Reason (optional)</label><input id="bk-reason" placeholder="e.g. Public holiday, Staff leave"></div>
         <div><button class="btn" id="bk-add">Block</button> <button class="sm hide" id="bk-cancel" style="padding:9px 14px">Cancel edit</button></div></div>
       <div class="tw" style="margin-top:10px"><table><thead><tr><th>Dates</th><th>Time</th><th>Reason</th><th>Existing appointments</th><th></th></tr></thead><tbody id="bk-body"></tbody></table></div></div>
-    <div class="card"><div class="row"><h2>WhatsApp Reminders</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="rm-range" style="width:auto"><option value="today">Today</option><option value="tomorrow" selected>Tomorrow</option><option value="week">Next 7 days</option></select><button class="btn" id="rm-all" style="background:#16a34a">Send all unsent</button></div></div>
-      <div class="tw"><table><thead><tr><th>When</th><th>Customer</th><th>Service</th><th>Phone</th><th>Reminder</th><th></th></tr></thead><tbody id="rm-body"></tbody></table></div></div>
-    <div class="card"><h2 style="margin-bottom:10px">Appointments — <span id="sc-daytxt"></span></h2><div class="tw"><table><thead><tr><th>Time</th><th>Customer</th><th>Service</th><th>Staff</th><th>Status</th><th>A/R · Billing</th><th></th></tr></thead><tbody id="sc-body"></tbody></table></div></div>
-    <div class="card"><h2 id="ap-title" style="margin-bottom:10px">New Appointment</h2><div class="grid">
-      <div><label>Customer</label><select id="ap-cust"></select></div><div><label>Date</label><input type="date" id="ap-date"></div><div><label>Time</label><input type="time" id="ap-time" value="10:00"></div><div><label>Duration (min)</label><input type="number" id="ap-dur" value="60" min="5" step="5"></div>
-      <div><label>Service (from Inventory)</label><select id="ap-prod"></select></div><div><label>Service name</label><input id="ap-svc"></div>
-      <div><label>Use package</label><select id="ap-pkg"></select></div><div><label>Staff</label><input id="ap-staff"></div>
-      <div style="grid-column:span 2"><label>Notes</label><input id="ap-notes"></div>
-      <div><button class="btn" id="ap-save">Book Appointment</button> <button class="sm hide" id="ap-cancel" style="padding:9px 14px">Cancel edit</button></div></div>
-      <small id="ap-info" style="color:#6b7280;display:block;margin-top:8px"></small></div>
   </section>
   <!-- TAB: Inventory -->
   <section id="t-inventory" class="hide">
@@ -449,6 +459,16 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
         <div id="qr-list" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px"></div></div>
       <div style="text-align:right"><button class="btn" id="c-save">Save Company Details</button></div></div>
     <div class="card"><h2 style="margin-bottom:10px">Chart of Accounts</h2><p style="color:var(--mut);margin:0 0 10px">Accounts, codes and categories are now managed in the <b>Account Maintenance</b> tab.</p><button class="btn" type="button" onclick="switchTab('coa')">Open Account Maintenance</button></div>
+    <div class="card"><h2 style="margin-bottom:6px">Cloud login (Supabase)</h2><p style="color:var(--mut);margin:0 0 10px">Connection used for cloud sync and the login screen. Saved on this device only. Your email and password are entered on the login screen (the same account must be used on every device).</p>
+      <div class="grid"><div><label>Cloud sync</label><select id="cl-on"><option value="0">Off — local mode (no login)</option><option value="1">On — require Supabase login</option></select></div>
+        <div><label>Status</label><div id="cl-status" style="padding:9px 0"></div></div>
+        <div style="grid-column:1/-1"><label>Project URL</label><input id="cl-url" placeholder="https://xxxx.supabase.co" autocomplete="off"></div>
+        <div style="grid-column:1/-1"><label>Publishable (anon) key</label><input id="cl-key" type="password" autocomplete="off" placeholder="sb_publishable_… or the legacy anon key"></div>
+        <div><label>Supabase login email (auto sign-in)</label><input id="cl-email" type="email" autocomplete="off" placeholder="your@email.com"></div>
+        <div><label>Supabase login password</label><input id="cl-pass" type="password" autocomplete="new-password" placeholder="leave both blank to type it on the login screen"></div></div>
+      <small style="color:var(--mut);display:block;margin-top:6px">Use the publishable / anon key only — never the secret or service_role key. Changing the project signs you out; the page reloads after saving.<br>If you save the email and password here, the app signs in automatically when cloud sync is On — you will not need to type them. They are stored <b>as plain text in this browser only</b>, so do not use this on a shared computer.</small>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="cl-save">Save &amp; reload</button><button class="sm" id="cl-test" style="padding:9px 14px">Test connection</button><button class="sm" id="cl-show" style="padding:9px 14px">Show key &amp; password</button><button class="sm" id="cl-out" style="padding:9px 14px">Log out</button><button class="sm del" id="cl-def" style="padding:9px 14px">Restore defaults</button></div>
+      <div id="cl-msg" style="margin-top:8px"></div></div>
     <div class="card"><h2 style="margin-bottom:10px">Backup</h2><button class="btn" id="bk-exp">Export backup (.json)</button> &nbsp; <label style="display:inline">Restore: <input type="file" id="bk-imp" accept=".json" style="width:auto"></label></div>
     <div class="card"><h2 style="margin-bottom:6px">Photo storage (my computer)</h2><p style="color:var(--mut);margin:0 0 10px">Customer service photos are saved on your own computer through the photo server, instead of inside the browser. The address and password below are kept on <b>this device only</b> – enter them once on each phone / computer. The device needs Tailscale turned on to reach the server.</p>
       <div class="grid"><div><label>Photo server address</label><input id="ph-url" placeholder="https://my-pc.tailxxxx.ts.net" autocapitalize="off" autocomplete="off"></div><div><label>Password (shown in the photo server window)</label><input id="ph-key" type="password" autocomplete="off"></div></div>
@@ -458,6 +478,22 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
       <div id="ls-info" style="margin-bottom:10px"></div><button class="btn" id="ls-clean">Delete old local safety copies</button> <div id="ls-msg" style="margin-top:8px"></div></div>
     <div class="card" style="border:1px solid #dc2626"><h2 style="margin-bottom:6px;color:#dc2626">Reset all data</h2><p style="color:var(--mut);margin:0 0 10px">Erases <b>all</b> records (invoices, customers, ledger, accounts, settings…) on this device <b>and in the cloud</b>, and other devices will receive the empty data too. Please export a backup first. Photo files already saved on your photo server are not deleted.</p>
       <div class="grid"><div><label>Password</label><input type="password" id="rs-pw" autocomplete="off"></div><div style="align-self:end"><button class="btn" id="rs-go" style="background:#dc2626">Reset all data</button></div></div><div id="rs-msg" style="margin-top:8px"></div></div>
+  </section>
+  <!-- TAB: User Maintenance -->
+  <section id="t-users" class="hide">
+    <div class="card"><h2 id="us-title" style="margin-bottom:6px">User Maintenance</h2>
+      <p id="us-note" style="color:var(--mut);margin:0 0 10px"></p>
+      <div class="grid"><div><label>Login ID</label><input id="us-id" autocomplete="off"></div><div><label>Name</label><input id="us-name" autocomplete="off"></div>
+        <div><label id="us-pwl">Password (min. 6 characters)</label><input id="us-pw" type="password" autocomplete="new-password"></div><div><label>Confirm password</label><input id="us-pw2" type="password" autocomplete="new-password"></div>
+        <div><label>Role</label><select id="us-role"><option value="user">User (choose modules below)</option><option value="admin">Admin (all modules + user maintenance)</option></select></div><div><label>Status</label><select id="us-act"><option value="1">Active</option><option value="0">Disabled (cannot log in)</option></select></div>
+        <div style="grid-column:1/-1"><label>Password hint (optional, shown on the login screen)</label><input id="us-hint" autocomplete="off"></div></div>
+      <label style="margin-top:6px;display:block">Modules this user can open</label>
+      <div id="us-perms" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 12px;margin:6px 0"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><button class="sm" id="us-p-mgr" type="button">Preset: Manager</button><button class="sm" id="us-p-staff" type="button">Preset: Staff</button><button class="sm" id="us-p-all" type="button">Select all</button><button class="sm" id="us-p-none" type="button">Clear</button></div>
+      <div><button class="btn" id="us-save">Add User</button> <button class="sm hide" id="us-cancel" style="padding:9px 14px">Cancel edit</button></div><div id="us-msg" style="margin-top:8px"></div></div>
+    <div class="card"><h2 style="margin-bottom:10px">Users</h2><div class="tw"><table><thead><tr><th>Login ID</th><th>Name</th><th>Role</th><th>Modules</th><th>Status</th><th>Last login</th><th></th></tr></thead><tbody id="us-body"></tbody></table></div></div>
+    <div class="card hide" id="us-off-card"><h2 style="margin-bottom:6px">Turn off login</h2><p style="color:var(--mut);margin:0 0 10px">Removes <b>all</b> users so the app opens without a login. Enter your own password to confirm.</p>
+      <div class="grid"><div><label>Your password</label><input id="us-offpw" type="password" autocomplete="current-password"></div><div style="align-self:end"><button class="btn" id="us-off" style="background:#dc2626">Remove all users &amp; turn off login</button></div></div><div id="us-offmsg" style="margin-top:8px"></div></div>
   </section>
 </main>
 
@@ -494,7 +530,10 @@ html[data-theme="dark"] .dash-panel,html[data-theme="dark"] .db-card{box-shadow:
 
 <script>
 /* ☁️ 云端同步总开关：false = 暂时停用 Supabase（纯本机模式，不加载 SDK、不显示登录页）；改回 true 即可重新启用 */
-const CLOUD_ENABLED = true;
+const CLOUD_CFG_KEY = 'micro_bookkeeping_cloud_cfg';          // 云端设置存在本机浏览器，不随云端同步；可在 Settings › Cloud login (Supabase) 修改
+const CLOUD_DEF = { enabled: false, url: 'https://emlnbtomkmdifdycqarm.supabase.co', key: 'sb_publishable_upTN0MBYoTHvuyCAiLkTWg_Y7z0ZbVr' };
+let cloudCfg = Object.assign({}, CLOUD_DEF); try { Object.assign(cloudCfg, JSON.parse(localStorage.getItem(CLOUD_CFG_KEY)) || {}); } catch (e) {}
+const CLOUD_ENABLED = !!cloudCfg.enabled;
 if (CLOUD_ENABLED) document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
 </script>
 <script>
@@ -507,14 +546,13 @@ const OBE = 'Opening Balance Equity';
 const fresh = () => ({
   co: { name: '', regNo: '', taxId: '', address: '', phone: '', email: '', website: '', bank: '', notes: 'Thank you for your business.', taxName: 'SST', taxRate: 0, logo: '', qrs: [], cc: '60', fax: '', tin: '', msic: '', taxCode: 'SV', payee: '', layout: 'classic', remindTpl: 'Hi {name}, this is a friendly reminder of your appointment:\n{service} {staff}\n{weekday}, {date} at {time}\nPlease reply to confirm, or let us know if you need to reschedule.\n— {company}', footer2: 'THIS IS A COMPUTER GENERATED INVOICE NO SIGNATURE IS REQUIRED.' },
   accts: { income: ['Sales Revenue', 'Service Income', 'Other Income'], expense: ['General Expense', 'Utility', 'Rent', 'Salaries', 'Supplies', 'Marketing', 'Other Expense'] },
-  entries: [], journal: [], invoices: [], payments: [], customers: [], products: [], packages: [], visits: [], stockAdj: [], appts: [], topups: [], blocks: [], nextInv: 1 });
+  entries: [], journal: [], invoices: [], payments: [], customers: [], products: [], packages: [], visits: [], stockAdj: [], appts: [], topups: [], blocks: [], users: [], nextInv: 1 });
 let S;
 try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY))); } catch (e) { S = fresh(); }
 // 本机缓存立即写入；云端写入由防抖队列处理，避免每个字段输入都触发请求
 let cloudClient = null, cloudUser = null, cloudReady = false, cloudDirty = false, cloudApplying = false;
 let cloudRevision = 0, cloudChannel = null, cloudTimer = null, cloudBusy = false, cloudConflict = false, cloudChangeSeq = 0;
-const CLOUD_URL = 'https://emlnbtomkmdifdycqarm.supabase.co';
-const CLOUD_KEY = 'sb_publishable_upTN0MBYoTHvuyCAiLkTWg_Y7z0ZbVr';
+const CLOUD_URL = cloudCfg.url, CLOUD_KEY = cloudCfg.key;
 const cloudMsg = (t, color) => { const el = document.getElementById('cloud-status'); if (el) { el.textContent = t; if (color) el.style.color = color; } };
 let saveWarned = false;
 const localSave = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); saveWarned = false; } catch (e) { if (!saveWarned) { saveWarned = true; alert('Browser storage is full — your latest change could NOT be saved. Download a backup in Settings, then delete some old photos.'); } } };
@@ -587,15 +625,21 @@ async function afterLogin(user) {
 async function initCloud() {
   if(!window.supabase?.createClient) { $('cloud-auth-msg').textContent='无法加载 Supabase SDK，请检查网络连接后刷新。'; return; }
   cloudClient=window.supabase.createClient(CLOUD_URL,CLOUD_KEY);
+  if(cloudCfg.email){ $('cloud-email').value=cloudCfg.email; if(cloudCfg.pass) $('cloud-password').value=cloudCfg.pass; }
   $('cloud-login').onclick=async()=>{ const email=$('cloud-email').value.trim(),password=$('cloud-password').value; $('cloud-auth-msg').textContent='Signing in…'; const {data,error}=await cloudClient.auth.signInWithPassword({email,password}); if(error) $('cloud-auth-msg').textContent=error.message; else await afterLogin(data.user); };
   $('cloud-signup').onclick=async()=>{ const email=$('cloud-email').value.trim(),password=$('cloud-password').value; $('cloud-auth-msg').textContent='Creating account…'; const {data,error}=await cloudClient.auth.signUp({email,password}); if(error) $('cloud-auth-msg').textContent=error.message; else if(data.session) await afterLogin(data.user); else $('cloud-auth-msg').textContent='注册成功。请检查邮箱完成验证，然后回来登录。'; };
   $('cloud-sync-now').onclick=async()=>{ if(!cloudReady)return alert('请先登录'); if(cloudDirty) await pushCloud(); else try{await pullCloud();}catch(e){alert(e.message);} };
   $('cloud-backup').onclick=()=>downloadJson(S,'Micro-Bookkeeping-backup-'+today()+'.json');
-  $('cloud-logout').onclick=async()=>{ if(cloudDirty && !confirm('本机还有未同步修改。仍要登出吗？建议先点 Sync now。'))return; await cloudClient.auth.signOut(); location.reload(); };
+  $('cloud-logout').onclick=async()=>{ if(cloudDirty && !confirm('本机还有未同步修改。仍要登出吗？建议先点 Sync now。'))return; await cloudClient.auth.signOut(); try{sessionStorage.setItem('mb_noauto','1');}catch(e){} location.reload(); };
   $('cloud-use-server').onclick=async()=>{ cloudConflict=false; cloudDirty=false; try{await pullCloud({force:true});}catch(e){alert(e.message);} };
   $('cloud-keep-local').onclick=async()=>{ cloudConflict=false; try{const {data,error}=await cloudClient.from('bookkeeping_data').select('revision').eq('user_id',cloudUser.id).maybeSingle();if(error)throw error;cloudRevision=data?.revision||0; await pushCloud();}catch(e){showConflict('无法安全上传：'+e.message);} };
   const {data:{session}}=await cloudClient.auth.getSession();
   if(session) await afterLogin(session.user);
+  else if(cloudCfg.email && cloudCfg.pass && !(()=>{try{return sessionStorage.getItem('mb_noauto')==='1';}catch(e){return false;}})()) {   // 设置里保存了账号密码：自动登录
+    $('cloud-auth-msg').textContent='Signing in automatically…';
+    const {data,error}=await cloudClient.auth.signInWithPassword({email:cloudCfg.email,password:cloudCfg.pass});
+    if(error) $('cloud-auth-msg').textContent='自动登录失败：'+error.message+'（请检查 Settings › Cloud login 里保存的邮箱 / 密码，或在此手动登录）'; else await afterLogin(data.user);
+  }
 }
 window.addEventListener('online',()=>{if(cloudReady){if(cloudDirty)pushCloud();else pullCloud().catch(()=>{});}});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudReady){if(cloudDirty)pushCloud();else pullCloud().catch(()=>{});}});
@@ -2394,9 +2438,9 @@ document.querySelectorAll('.qa-tile').forEach(b => b.onclick = () => {
   setTimeout(() => { if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else window.scrollTo({ top: 0, behavior: 'smooth' }); }, 30);
 });
 
-function renderAll() { coaEnsure(); renderBrand(); renderKpis(); renderEntries(); renderInvoices(); fillCustSel(); renderCustomers(); renderCustDetail(); renderReport(); renderInventory(); renderSchedule(); renderAR(); renderPL(); renderBS(); renderRpt(); renderJv(); renderAccounts(); renderCoa(); renderOb(); renderSettings(); }
-const TABS = ['dashboard', 'ledger', 'jv', 'invoices', 'schedule', 'customers', 'inventory', 'ar', 'pl', 'bs', 'rpt', 'accounts', 'coa', 'settings'];
-function switchTab(t) { document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === t)); TABS.forEach(k => $('t-' + k).classList.toggle('hide', k !== t));
+function renderAll() { coaEnsure(); renderBrand(); renderKpis(); renderEntries(); renderInvoices(); fillCustSel(); renderCustomers(); renderCustDetail(); renderReport(); renderInventory(); renderSchedule(); renderAR(); renderPL(); renderBS(); renderRpt(); renderJv(); renderAccounts(); renderCoa(); renderOb(); renderSettings(); renderUsers(); applyAccess(); }
+const TABS = ['dashboard', 'ledger', 'jv', 'invoices', 'schedule', 'customers', 'inventory', 'ar', 'pl', 'bs', 'rpt', 'accounts', 'coa', 'settings', 'users'];
+function switchTab(t) { t = accessTab(t); document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === t)); TABS.forEach(k => $('t-' + k).classList.toggle('hide', k !== t));
   const tb = document.querySelector('.tabs button[data-tab="' + t + '"]'); $('page-title').textContent = t === 'dashboard' ? 'Dashboard Overview' : (tb ? tb.textContent : ''); document.body.classList.remove('nav-open');
   if (t === 'dashboard' && typeof dashRender === 'function') { try { dashRender(); } catch (e) {} } }
 $('nav-btn').onclick = () => document.body.classList.toggle('nav-open'); $('sb-back').onclick = () => document.body.classList.remove('nav-open');
@@ -2408,6 +2452,147 @@ function themeLabel(t) { $('theme-btn').textContent = t === 'dark' ? '☀️ Lig
 function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); try { localStorage.setItem('mb-theme', t); } catch (e) {} themeLabel(t); if (!$('t-dashboard').classList.contains('hide')) dashRender(); }
 $('theme-btn').onclick = () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 themeLabel(document.documentElement.getAttribute('data-theme'));
+/* ===== User Maintenance：多用户登录 + 按模块授权。用户存放在 S.users（随备份 / 云端同步），登录状态只在当前浏览器分页有效 ===== */
+var memUid = null, editingUsr = null, alFails = 0, usrPermsBuilt = false, usrFirstState = null;
+const USR_PRESETS = { manager: ['dashboard', 'ledger', 'jv', 'invoices', 'schedule', 'customers', 'inventory', 'ar', 'pl', 'bs', 'rpt', 'accounts'], staff: ['dashboard', 'invoices', 'schedule', 'customers', 'inventory'] };
+function getSid() { try { return sessionStorage.getItem('mb_uid'); } catch (e) { return memUid; } }
+function setSid(v) { memUid = v; try { v ? sessionStorage.setItem('mb_uid', v) : sessionStorage.removeItem('mb_uid'); } catch (e) {} }
+function usersOn() { return (S.users || []).some(u => u.active); }
+function curUser() { return usersOn() ? (S.users.find(u => u.id === getSid() && u.active) || null) : null; }
+function canTab(t) { if (!usersOn()) return true; const u = curUser(); if (!u) return false; return u.role === 'admin' || (t !== 'users' && (u.perms || []).includes(t)); }
+function accessTab(t) { return canTab(t) ? t : (TABS.find(canTab) || 'dashboard'); }
+async function pwHash(pw, salt) {
+  try { if (window.crypto && crypto.subtle) { const enc = new TextEncoder(), k = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']), b = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode(salt), iterations: 150000, hash: 'SHA-256' }, k, 256); return 'p1:' + [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); } } catch (e) {}
+  const t = salt + '|' + pw; let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0; i < t.length; i++) { const c = t.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 'f1:' + (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');   // 备用简易哈希（浏览器不支持加密接口时）
+}
+async function userCheck(u, pw) { if ((u.hash || '').startsWith('p1:') && !(window.crypto && crypto.subtle)) return 'nosubtle'; return (await pwHash(pw, u.salt)) === u.hash; }
+const TAB_NAME = t => { const b = document.querySelector('.tabs button[data-tab="' + t + '"]'); return b ? b.textContent : t; };
+// 旧版“单一 App login”自动升级为第一个管理员
+(() => { try { const old = JSON.parse(localStorage.getItem('micro_bookkeeping_login')); if (old && old.on && old.id && old.hash && !(S.users || []).length) { S.users = [{ id: uid(), loginId: old.id, name: old.id, role: 'admin', perms: [], active: true, salt: old.salt, hash: old.hash, hint: old.hint || '', created: today() }]; localSave(); } localStorage.removeItem('micro_bookkeeping_login'); } catch (e) {} })();
+
+/* --- 登录画面 --- */
+function alShow() { const hint = (S.users.filter(u => u.active && u.hint).length === 1 ? S.users.find(u => u.active && u.hint).hint : ''); $('app-login').style.display = 'flex'; $('al-co').textContent = '🔒 ' + (S.co && S.co.name ? S.co.name : 'Micro Bookkeeping'); $('al-hint-btn').classList.add('hide'); $('al-hint').textContent = ''; $('al-msg').textContent = ''; $('al-pw').value = ''; setTimeout(() => $('al-id').focus(), 50); }
+async function alGo() {
+  const id = $('al-id').value.trim().toLowerCase(), pw = $('al-pw').value; if (!id || !pw) { $('al-msg').textContent = 'Please enter your Login ID and password.'; return; }
+  const u = S.users.find(x => x.active && x.loginId.toLowerCase() === id), r = u ? await userCheck(u, pw) : (await pwHash(pw, 'x'), false);
+  if (r === 'nosubtle') { $('al-msg').textContent = 'This browser cannot verify the password on this page (open the file in Chrome / Edge / Safari).'; return; }
+  if (r === true) { alFails = 0; setSid(u.id); u.lastLogin = new Date().toISOString(); save(); $('app-login').style.display = 'none'; $('al-pw').value = ''; $('al-id').value = ''; $('al-msg').textContent = ''; applyAccess(); switchTab('dashboard'); renderUsers(); return; }
+  alFails++; const wait = Math.min(alFails, 5); $('al-msg').textContent = 'Incorrect Login ID or password.' + (alFails >= 3 ? ' Please wait ' + wait + 's…' : ''); $('al-pw').value = '';
+  if (alFails >= 3) { $('al-go').disabled = true; setTimeout(() => { $('al-go').disabled = false; }, wait * 1000); }
+}
+$('al-go').onclick = alGo; ['al-id', 'al-pw'].forEach(i => $(i).addEventListener('keydown', e => { if (e.key === 'Enter') alGo(); }));
+$('al-id').addEventListener('input', () => { const u = S.users.find(x => x.active && x.loginId.toLowerCase() === $('al-id').value.trim().toLowerCase()); $('al-hint-btn').classList.toggle('hide', !(u && u.hint)); $('al-hint').textContent = ''; });
+$('al-hint-btn').onclick = () => { const u = S.users.find(x => x.active && x.loginId.toLowerCase() === $('al-id').value.trim().toLowerCase()); if (u && u.hint) $('al-hint').textContent = 'Hint: ' + u.hint; };
+
+/* --- 访问控制：隐藏无权限的菜单，显示当前用户 --- */
+function applyAccess() {
+  if (!Array.isArray(S.users)) S.users = [];
+  const on = usersOn(), u = curUser();
+  if (on && !u) { if ($('app-login').style.display !== 'flex') alShow(); }
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('hide', !canTab(b.dataset.tab)));
+  $('hdr-user').classList.toggle('hide', !(on && u)); $('hdr-user').style.display = on && u ? 'flex' : ''; if (u) $('hdr-name').textContent = (u.name || u.loginId) + (u.role === 'admin' ? ' (Admin)' : '');
+  const cur = document.querySelector('.tabs button.on'); if (cur && !canTab(cur.dataset.tab)) switchTab(accessTab('dashboard'));
+}
+$('hdr-out').onclick = () => { setSid(null); location.reload(); };
+$('hdr-pw').onclick = () => { ['pm-cur', 'pm-new', 'pm-new2'].forEach(i => $(i).value = ''); $('pm-msg').textContent = ''; $('pw-modal').style.display = 'flex'; setTimeout(() => $('pm-cur').focus(), 50); };
+$('pm-cancel').onclick = () => { $('pw-modal').style.display = 'none'; };
+$('pm-save').onclick = async () => {
+  const u = curUser(), pmErr = t => { $('pm-msg').innerHTML = `<span style="color:#dc2626">${esc(t)}</span>`; }; if (!u) return;
+  const r = await userCheck(u, $('pm-cur').value); if (r === 'nosubtle') return pmErr('This browser cannot verify the password on this page.'); if (r !== true) return pmErr('Current password is incorrect.');
+  const n = $('pm-new').value; if (n.length < 6) return pmErr('New password must be at least 6 characters.'); if (n !== $('pm-new2').value) return pmErr('The two new passwords do not match.');
+  u.salt = uid() + uid(); u.hash = await pwHash(n, u.salt); u.defaultPw = false; save(); $('pm-msg').innerHTML = '<span style="color:#16a34a">Password changed.</span>'; setTimeout(() => { $('pw-modal').style.display = 'none'; }, 900);
+};
+
+/* --- User Maintenance 页面 --- */
+function usrPermsBuild() {
+  if (usrPermsBuilt) return; usrPermsBuilt = true;
+  $('us-perms').innerHTML = TABS.filter(t => t !== 'users').map(t => `<label style="display:flex;gap:6px;align-items:center;font-weight:400;margin:0"><input type="checkbox" data-p="${t}" style="width:auto;margin:0"> ${esc(TAB_NAME(t))}</label>`).join('');
+}
+const usrSetPerms = list => document.querySelectorAll('#us-perms input').forEach(c => { c.checked = list.includes(c.dataset.p); });
+const usrGetPerms = () => [...document.querySelectorAll('#us-perms input:checked')].map(c => c.dataset.p);
+function usrRoleUi() { const adm = $('us-role').value === 'admin'; document.querySelectorAll('#us-perms input').forEach(c => { c.disabled = adm; }); $('us-perms').style.opacity = adm ? .5 : 1; }
+$('us-role').onchange = usrRoleUi;
+const usrPreset = list => { if ($('us-role').value === 'admin') { $('us-role').value = 'user'; usrRoleUi(); } usrSetPerms(list); };   // 点预设会自动切换为 User 角色
+$('us-p-mgr').onclick = () => usrPreset(USR_PRESETS.manager); $('us-p-staff').onclick = () => usrPreset(USR_PRESETS.staff); $('us-p-all').onclick = () => usrPreset(TABS.filter(t => t !== 'users')); $('us-p-none').onclick = () => usrPreset([]);
+const usMsg = (t, ok) => { $('us-msg').innerHTML = `<span style="color:${ok ? '#16a34a' : '#dc2626'}">${esc(t)}</span>`; };
+function usrReset() {
+  editingUsr = null; ['us-id', 'us-name', 'us-pw', 'us-pw2', 'us-hint'].forEach(i => $(i).value = ''); const first = !(S.users || []).length;
+  usrFirstState = first; $('us-role').value = first ? 'admin' : 'user'; $('us-role').disabled = false; $('us-act').value = '1'; $('us-act').disabled = false; usrSetPerms(first ? [] : USR_PRESETS.staff); usrRoleUi();
+  $('us-save').textContent = 'Add User'; $('us-cancel').classList.add('hide'); $('us-title').textContent = 'User Maintenance'; $('us-pwl').textContent = 'Password (min. 6 characters)';
+  $('us-note').innerHTML = first ? '<b>No users yet — the app is open to everyone.</b> Create the first user — it must be an Admin and Active (you can add Users, set their modules and use the presets afterwards). As soon as it is saved, a Login ID and password will be required to open the app.' : 'Add users and choose which modules each person can open. Admins can open everything and manage users. Anyone can change their own password from the header. The built-in <b>Admin</b> user starts with the password <b>Admin</b> — please change it after the first login.';
+}
+window.usrEdit = id => { const u = S.users.find(x => x.id === id); if (!u) return; usrPermsBuild(); editingUsr = id;
+  $('us-id').value = u.loginId; $('us-name').value = u.name || ''; $('us-pw').value = $('us-pw2').value = ''; $('us-hint').value = u.hint || ''; $('us-role').disabled = false; $('us-act').disabled = false; $('us-role').value = u.role; $('us-act').value = u.active ? '1' : '0'; usrSetPerms(u.perms || []); usrRoleUi();
+  $('us-save').textContent = 'Save Changes'; $('us-cancel').classList.remove('hide'); $('us-title').textContent = 'Edit User — ' + u.loginId; $('us-pwl').textContent = 'New password (leave blank to keep the current one)'; $('us-title').scrollIntoView({ behavior: 'smooth' }); };
+$('us-cancel').onclick = () => { usrReset(); $('us-msg').textContent = ''; };
+$('us-save').onclick = async () => {
+  const loginId = $('us-id').value.trim(), name = $('us-name').value.trim() || loginId, pw = $('us-pw').value, pw2 = $('us-pw2').value, hint = $('us-hint').value.trim(), first = !S.users.length;
+  const role = $('us-role').value, active = $('us-act').value === '1', perms = role === 'admin' ? [] : usrGetPerms(), ex = editingUsr && S.users.find(x => x.id === editingUsr);
+  if (loginId.length < 3 || /\s/.test(loginId)) return usMsg('Login ID must be at least 3 characters with no spaces.');
+  if (first && (role !== 'admin' || !active)) return usMsg('The first user must be an Admin and Active, so that someone can manage users. Create this Admin first, then add other users with Role / Status / modules.');
+  if (S.users.some(x => x.id !== editingUsr && x.loginId.toLowerCase() === loginId.toLowerCase())) return usMsg('This Login ID is already used by another user.');
+  if (!ex || pw) { if (pw.length < 6) return usMsg('Password must be at least 6 characters.'); if (pw !== pw2) return usMsg('The two passwords do not match.'); if (hint && hint.toLowerCase().includes(pw.toLowerCase())) return usMsg('The hint must not contain the password itself.'); }
+  if (role === 'user' && !perms.length) return usMsg('Please tick at least one module for this user.');
+  const admins = S.users.filter(x => x.id !== editingUsr && x.active && x.role === 'admin').length + (role === 'admin' && active ? 1 : 0); if (admins < 1) return usMsg('There must always be at least one active Admin.');
+  const rec = ex || { id: uid(), created: today() }; Object.assign(rec, { loginId, name, role, perms, active, hint });
+  if (!ex || pw) { rec.salt = uid() + uid(); rec.hash = await pwHash(pw, rec.salt); rec.defaultPw = false; }
+  if (!ex) S.users.push(rec); if (first) setSid(rec.id);                         // 创建第一个用户时，当前窗口直接以它登录，避免把自己锁在门外
+  const wasEdit = !!ex; usrReset(); save(); renderAll(); usMsg(first ? 'First Admin created. Login is now required to open the app.' : wasEdit ? 'User updated.' : 'User added.', true);
+};
+window.usrDel = id => { const u = S.users.find(x => x.id === id); if (!u) return;
+  if (u.id === getSid()) return alert('You cannot delete the account you are signed in with.');
+  if (u.active && u.role === 'admin' && S.users.filter(x => x.active && x.role === 'admin').length < 2) return alert('There must always be at least one active Admin.');
+  if (!confirm('Delete user ' + u.loginId + '?')) return; S.users = S.users.filter(x => x.id !== id); if (editingUsr === id) usrReset(); save(); renderAll(); };
+{ const f = window.usrDel; window.usrDel = (...a) => { cfRetry = () => f(...a); return f(...a); }; }
+$('us-off').onclick = async () => {
+  const u = curUser(); if (!u) return; const r = await userCheck(u, $('us-offpw').value), m = t => { $('us-offmsg').innerHTML = `<span style="color:#dc2626">${esc(t)}</span>`; };
+  if (r === 'nosubtle') return m('This browser cannot verify the password on this page.'); if (r !== true) return m('Your password is incorrect.');
+  S.users = []; setSid(null); $('us-offpw').value = ''; usrReset(); save(); renderAll(); $('us-offmsg').innerHTML = '<span style="color:#16a34a">Login turned off — the app now opens without a password.</span>';
+};
+function renderUsers() {
+  if (!Array.isArray(S.users)) S.users = [];
+  usrPermsBuild(); if (!$('us-body')) return;
+  const first = !S.users.length; $('us-off-card').classList.toggle('hide', first);
+  if (!editingUsr && usrFirstState !== first) usrReset();                  // 第一位用户 / 已有用户 两种表单状态切换
+  const sid = getSid(), n = TABS.length - 1;
+  $('us-body').innerHTML = S.users.slice().sort((a, b) => a.loginId.localeCompare(b.loginId)).map(u => `<tr${u.active ? '' : ' style="opacity:.55"'}><td><b>${esc(u.loginId)}</b>${u.id === sid ? ' <small style="color:var(--mut)">(you)</small>' : ''}</td><td>${esc(u.name || '')}</td><td><span class="badge ${u.role === 'admin' ? 'b-in' : 'b-unpaid'}">${u.role === 'admin' ? 'Admin' : 'User'}</span></td>
+    <td title="${esc(u.role === 'admin' ? 'All modules' : (u.perms || []).map(TAB_NAME).join(', '))}">${u.role === 'admin' ? 'All' : (u.perms || []).length + ' of ' + n}</td><td>${u.active ? '<span class="badge b-paid">Active</span>' : '<span class="badge b-out">Disabled</span>'}${u.defaultPw ? '<br><small style="color:#d97706">Default password — please change</small>' : ''}</td><td>${u.lastLogin ? dmy(u.lastLogin.slice(0, 10)) + ' ' + new Date(u.lastLogin).toTimeString().slice(0, 5) : '-'}</td>
+    <td style="white-space:nowrap"><button class="sm" onclick="usrEdit('${u.id}')">Edit</button><button class="sm del" onclick="usrDel('${u.id}')">Delete</button></td></tr>`).join('') || empty(7);
+}
+async function usrSeed() {                                   // 默认初始用户：Admin / 密码 Admin（只建立一次；之后若选择 Turn off login 不会再自动建立）
+  const salt = uid() + uid(), hash = await pwHash('Admin', salt);
+  if (S.users.length) return; S.users.push({ id: uid(), loginId: 'Admin', name: 'Admin', role: 'admin', perms: [], active: true, salt, hash, hint: '', created: today(), defaultPw: true }); S.usersInit = true; save(); renderAll();
+}
+usrReset();
+if (S.users.length) S.usersInit = true;
+if (!S.users.length && !S.usersInit) { alShow(); usrSeed(); } else if (usersOn() && !curUser()) alShow();
+
+/* ===== Settings：Cloud login (Supabase) ===== */
+function clStatus() { $('cl-status').innerHTML = !CLOUD_ENABLED ? '<span class="badge b-unpaid">Off · local mode</span>' : cloudReady ? '<span class="badge b-in">Connected</span> ' + esc(cloudUser && (cloudUser.email || cloudUser.id) || '') : '<span class="badge b-out">On · not signed in</span>'; $('cl-out').classList.toggle('hide', !cloudReady); }
+function clLoad() { $('cl-on').value = cloudCfg.enabled ? '1' : '0'; $('cl-url').value = cloudCfg.url || ''; $('cl-key').value = cloudCfg.key || ''; $('cl-email').value = cloudCfg.email || ''; $('cl-pass').value = cloudCfg.pass || ''; clStatus(); }
+const clMsg = (t, ok) => { $('cl-msg').innerHTML = `<span style="color:${ok ? '#16a34a' : '#dc2626'}">${esc(t)}</span>`; };
+function clRead() { return { enabled: $('cl-on').value === '1', url: $('cl-url').value.trim().replace(/\/+$/, ''), key: $('cl-key').value.trim(), email: $('cl-email').value.trim(), pass: $('cl-pass').value }; }
+function clValid(c) { if (!/^https:\/\/[^\s/]+$/i.test(c.url)) return 'Project URL must look like https://xxxx.supabase.co'; if (c.key.length < 20) return 'Please paste the publishable (anon) key.'; if (/service_role|sb_secret_/i.test(c.key)) return 'That looks like a secret key. Use the publishable / anon key only.'; if (!!c.email !== !!c.pass) return 'Enter both the login email and password, or leave both blank.'; return ''; }
+$('cl-show').onclick = () => { const k = $('cl-key'), q = $('cl-pass'); k.type = q.type = k.type === 'password' ? 'text' : 'password'; $('cl-show').textContent = k.type === 'password' ? 'Show key & password' : 'Hide key & password'; };
+$('cl-save').onclick = () => {
+  const c = clRead(), bad = (c.enabled || c.url || c.key) && clValid(c); if (c.enabled && bad) return clMsg(bad);
+  if (cloudReady && cloudDirty) return clMsg('There are unsynced changes. Click “Sync now” in the Cloud bar first, then save again.');
+  try { localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({ enabled: c.enabled, url: c.url || CLOUD_DEF.url, key: c.key || CLOUD_DEF.key, email: c.email, pass: c.pass })); } catch (e) { return clMsg('Could not save: ' + e.message); }
+  clMsg('Saved. Reloading…', true); setTimeout(() => location.reload(), 500);
+};
+$('cl-test').onclick = async () => {
+  const c = clRead(), bad = clValid(c); if (bad) return clMsg(bad); clMsg('Testing…', true);
+  try { const r = await fetch(c.url + '/auth/v1/settings', { headers: { apikey: c.key } });
+    if (r.ok && c.email) { const t = await fetch(c.url + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: c.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: c.email, password: c.pass }) }); return t.ok ? clMsg('Connection OK — and the email / password can sign in.', true) : clMsg('Connection OK, but the email or password was rejected by Supabase.'); }
+    if (r.ok) clMsg('Connection OK — the URL and key are valid.', true); else clMsg(r.status === 401 || r.status === 403 ? 'The server rejected the key (check the publishable / anon key).' : 'Server replied with status ' + r.status + '.'); }
+  catch (e) { clMsg('Cannot reach the server — check the Project URL and your internet connection.'); }
+};
+$('cl-out').onclick = () => $('cloud-logout').click();
+$('cl-def').onclick = () => { $('cl-url').value = CLOUD_DEF.url; $('cl-key').value = CLOUD_DEF.key; $('cl-email').value = $('cl-pass').value = ''; $('cl-on').value = '0'; clMsg('Defaults filled in (cloud Off). Click “Save & reload” to apply.', true); };
+$('cloud-localmode').onclick = () => { try { localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify(Object.assign({}, cloudCfg, { enabled: false }))); } catch (e) {} location.reload(); };
+clLoad(); setInterval(() => { if (!$('t-settings').classList.contains('hide') && document.activeElement && !['cl-url', 'cl-key', 'cl-on'].includes(document.activeElement.id)) clStatus(); }, 1500);
 if (CLOUD_ENABLED) initCloud().catch(e=>{console.error(e); $('cloud-auth-msg').textContent='初始化失败：'+e.message;});
 else { $('cloud-gate').style.display = 'none'; $('cloud-toolbar').style.display = 'none'; migrateTopups(); migrateOR(); migrateKO(); migrateCustAcct(); loadCompanyForm(); fillAccts(); addRow(); renderAll(); onProfileHash(); }   // 本机模式：直接用 localStorage 里的资料
 </script>
